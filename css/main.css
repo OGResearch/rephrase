@@ -319,6 +319,10 @@ h6, .h6 {
   display: none;
 }
 
+.scatterlayer .trace:last-child .points path {
+  pointer-events: all;
+}
+
 @media (max-width: 639px) {
   /* small screens */
   .left-logo-img, .right-logo-img {

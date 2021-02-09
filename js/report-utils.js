@@ -56,6 +56,7 @@ function createChart(parent, chartObj) {
   }
   // generate data for the chart
   var data = [];
+  var editableSeriesIndices = [];
   const limits = {
     min: chartObj.Settings.StartDate ? new Date(chartObj.Settings.StartDate) : null,
     max: chartObj.Settings.EndDate ? new Date(chartObj.Settings.EndDate) : null
@@ -66,14 +67,17 @@ function createChart(parent, chartObj) {
       const seriesObj = chartObj.Content[i];
       seriesObj.Settings = appendObjSettings(seriesObj.Settings || {}, chartObj.Settings || {});
       data.push($ru.createChartSeries(seriesObj, limits, colorList[i], chartLib));
+      if (seriesObj.Settings.Editable) {
+        editableSeriesIndices.push(i);
+      }
     }
   }
-  const interactive = (!chartObj.Settings.hasOwnProperty("InteractiveCharts"))
+  const interactive = (!chartObj.Settings.hasOwnProperty("InteractiveCharts") && editableSeriesIndices.length == 0)
     ? true
-    : chartObj.Settings.InteractiveCharts;
+    : chartObj.Settings.InteractiveCharts & (editableSeriesIndices.length == 0);
   const chartBody = (chartLib.toLowerCase() === "chartjs")
     ? $ru.createChartForChartJs(data, limits, chartObj.Settings.DateFormat, chartObj.Settings.Highlight || [])
-    : $ru.createChartForPlotly(data, limits, chartObj.Settings.DateFormat, chartObj.Settings.Highlight || [], interactive);
+    : $ru.createChartForPlotly(data, limits, chartObj.Settings.DateFormat, chartObj.Settings.Highlight || [], interactive, editableSeriesIndices);
   chartParent.appendChild(chartBody);
 }
 
@@ -262,7 +266,7 @@ function createSeriesForChartJs(title, dates, values, seriesSettings, colors, li
 
 
 // create chart elements using Plotly library
-function createChartForPlotly(data, limits, dateFormat, highlight, interactive) {
+function createChartForPlotly(data, limits, dateFormat, highlight, interactive, editableSeriesIndices) {
   var chartBody = document.createElement("div");
   $(chartBody).addClass("rephrase-chart-body");
   const layout = {
@@ -344,6 +348,9 @@ function createChartForPlotly(data, limits, dateFormat, highlight, interactive) 
   //  "cell auto" of XY grid behaves)
   $(document).ready(function () {
     Plotly.newPlot(chartBody, data, layout, config);
+    if (editableSeriesIndices.length > 0) {
+      startDragBehavior();
+    }
   });
 
   // make sure chart resizes correctly before printing
@@ -366,6 +373,32 @@ function createChartForPlotly(data, limits, dateFormat, highlight, interactive) 
   return chartBody;
 }
 
+function startDragBehavior() {
+  var d3 = Plotly.d3;
+  var drag = d3.behavior.drag();
+  // drag.origin(function (orig) {
+  //   var transform = d3.select(this).attr("transform");
+  //   var translate = transform.substring(10, transform.length - 1).split(/,| /);
+  //   return orig;
+  // });
+  drag.on("dragstart", function () {
+    console.log("Drag started transform=" + d3.select(this).attr("transform"));
+    this.style.fill = 'rgba(77, 190, 238, 1)';
+  });
+  drag.on("drag", function (a, b) {
+    var transform = d3.select(this).attr("transform");
+    var translate = transform.substring(10, transform.length - 1).split(/,| /);
+    var xMouse = translate[0];
+    var yMouse = d3.event.y;
+    d3.select(this).attr("transform", "translate(" + [xMouse, yMouse] + ")");
+  });
+  drag.on("dragend", function () {
+    console.log("Drag ended: transform=" + d3.select(this).attr("transform"));
+    // d3.select(".scatterlayer .trace:last-of-type .points path:last-of-type").call(drag);
+  });
+  d3.selectAll(".scatterlayer .trace:last-of-type .points path").call(drag);
+}
+
 // create series object for Plotly chart
 function createSeriesForPlotly(title, dates, values, seriesSettings, colors) {
   const seriesPlotType = seriesSettings.Type || "scatter";
@@ -373,7 +406,8 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors) {
     x: dates,
     y: values,
     name: title || "",
-    type: seriesPlotType.toLowerCase()
+    type: seriesPlotType.toLowerCase(),
+    mode: "lines" + ((seriesSettings.Editable) ? "+markers" : "")
   };
   if (seriesObj.type === "bar") {
     seriesObj.marker = {

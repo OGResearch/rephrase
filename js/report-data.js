@@ -435,10 +435,50 @@ var $reportWithoutData = {
       "Title": "",
       "Settings": {
         "Class": "",
-        "NumRows": 2,
+        "NumRows": 3,
         "NumColumns": 2
       },
       "Content": [
+        {
+          "Type": "CHART",
+          "Title": "Chart 0",
+          "Settings": {
+            "Class": "",
+            "DateFormat": "YYYY[Q]Q",
+            "IsTitlePartOfChart": false,
+            "Highlight": [
+              {
+                "EndDate": "2020-12-31"
+              },
+              {
+                "StartDate": "2022-04-01",
+                "Color": "rgba(100, 0, 200, 0.1)"
+              }
+            ],
+            "StartDate": "2020-01-01",
+            "EndDate": "2024-12-31"
+          },
+          "Content": [
+            {
+              "Type": "SERIES",
+              "Title": "Series 101",
+              "Settings": {
+                "Class": "",
+                "Type": "bar"
+              },
+              "Content": "PtkeOkuClHzhOfpmBevf"
+            },
+            {
+              "Type": "SERIES",
+              "Title": "Series 102",
+              "Settings": {
+                "Class": "",
+                "Editable": true
+              },
+              "Content": "ZinudJuZuGitiNTsJpBR"
+            }
+          ]
+        },
         {
           "Type": "CHART",
           "Title": "Chart 1",
