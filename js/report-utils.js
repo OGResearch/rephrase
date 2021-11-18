@@ -1130,7 +1130,7 @@ function createSection(parent, sectionObj) {
     : [sectionObj.Content];
   for (let i = 0; i < sectionContent.length; i++) {
     const elementObj = sectionContent[i];
-    $ru.addReportElement(parent, elementObj, sectionObj.Settings);
+    $ru.addReportElement(sectionParent, elementObj, sectionObj.Settings);
   }
 }
 
