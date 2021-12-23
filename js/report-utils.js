@@ -1057,12 +1057,13 @@ function createPager(parent, pagerObj) {
   sliderParent.on('changed.zf.slider', function () {
     showPage(sliderParent.find("input")[0].value);
   });
+  const startPage = Math.min(nPages - 1, pagerObj.Settings.StartPage || 0);
   var s = new Foundation.Slider(sliderParent, {
-    initialStart: pagerObj.Settings.StartPage || 0,
+    initialStart: startPage,
     end: nPages - 1
   });
   // show 1st page or the page specified in StartPage 
-  showPage(pagerObj.Settings.StartPage || 0);
+  showPage(startPage);
   // function updating value of the slider
   function updateSlider(sign) {
     var input = sliderParent.find("input");
