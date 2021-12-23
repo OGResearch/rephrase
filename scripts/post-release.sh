@@ -8,3 +8,5 @@ git checkout develop
 git merge master
 git push
 git push gh-origin develop
+git checkout master
+git push
