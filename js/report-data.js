@@ -25,42 +25,39 @@ var $reportWithoutData = {
     {
       "Type": "CHART",
       "Title": "Yield Curve, kind of",
-      "Settings": { 
+      "Settings": {
         "Class": "",
         "IsSeries": false,
         "IsTitlePartOfChart": false,
-        "Ticks": [1, 7, 365/12, 365/6, 365/4, 365, 365*1.5, 365*2, 365*3, 365*4],
+        "Ticks": [1, 7, 365 / 12, 365 / 6, 365 / 4, 365, 365 * 1.5, 365 * 2, 365 * 3, 365 * 4],
         "TickLabels": ["1D", "7D", "1M", "2M", "3M", "1Y", "1.5Y", "2Y", "3Y", "4Y"]
-      }, 
+      },
       "Content": [
-        { 
-          "Type": "CURVE", 
-          "Title": "Yield Curve 1", 
-          "Settings": { "Class": "" }, 
+        {
+          "Type": "CURVE",
+          "Title": "Yield Curve 1",
+          "Settings": { "Class": "" },
           "Content": {
-            "Ticks": [1, 7, 365/12, 365/6, 365/4, 365, 365*2],
+            "Ticks": [1, 7, 365 / 12, 365 / 6, 365 / 4, 365, 365 * 2],
             "Values": [1.5, 3.2, 3.7, 4.3, 4.9, 5.1, 5.3]
-          } 
+          }
         },
-        { 
-          "Type": "CURVE", 
-          "Title": "Yield Curve 2", 
-          "Settings": { "Class": "" }, 
-          "Content": {
-            "Ticks": [1, 7, 365/12, 365/6, 365/4, 365, 365*1.5, 365*3],
-            "Values": [2.5, 4.2, 4.7, 5.3, 5.9, 6.1, 6.3, 6.4]
-          } 
+        {
+          "Type": "CURVE",
+          "Title": "Yield Curve 2",
+          "Settings": { "Class": "" },
+          "Content": "Curve2"
         },
-        { 
-          "Type": "MARKER", 
-          "Title": "x005", 
-          "Settings": { 
+        {
+          "Type": "MARKER",
+          "Title": "x005",
+          "Settings": {
             "Class": "",
             "Color": "rgba(0, 120, 120, 1)",
             "Symbol": "cross"
-          }, 
+          },
           "Content": {
-            "X": 365*1.35,
+            "X": 365 * 1.35,
             "Y": 4.3,
           }
         }
@@ -971,6 +968,10 @@ var $reportWithoutData = {
   ]
 };
 var $databank = {
+  "Curve2": {
+    "Ticks": [1, 7, 365 / 12, 365 / 6, 365 / 4, 365, 365 * 1.5, 365 * 3],
+    "Values": [2.5, 4.2, 4.7, 5.3, 5.9, 6.1, 6.3, 6.4]
+  },
   "IbSWJNMuIiKbocfQKqXb": {
     "Name": "IbSWJNMuIiKbocfQKqXb",
     "Dates": "2020-01-01",
