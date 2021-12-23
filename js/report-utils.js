@@ -131,7 +131,7 @@ function createChartCurve(curveObj, limits, color, chartLib) {
     return {};
   }
   if (typeof curveObj.Content === "string") {
-    // todo: implement curve objects in the databank
+    curveObj.Content = $ru.databank.getEntry(curveObj.Content);
   }
   const overrideColor = (curveObj.hasOwnProperty("Settings") && (typeof curveObj.Settings === "object")
     && curveObj.Settings.hasOwnProperty("Color")) ? curveObj.Settings.Color : null;
