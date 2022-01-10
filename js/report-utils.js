@@ -71,9 +71,10 @@ function createChart(parent, chartObj) {
     min: chartObj.Settings.StartDate ? new Date(chartObj.Settings.StartDate) : null,
     max: chartObj.Settings.EndDate ? new Date(chartObj.Settings.EndDate) : null
   };
-  const isSeries = (!chartObj.Settings.hasOwnProperty("IsSeries"))
-    ? true
-    : chartObj.Settings.IsSeries;
+  const isSeries = (
+    !chartObj.Settings.hasOwnProperty("ChartType")
+    || chartObj.Settings.ChartType.toLowerCase() === "series"
+  );
   var ticks = { tickLabels: [], tickValues: [] };
   if (!isSeries) {
     if (chartObj.Settings.hasOwnProperty("TickLabels")) {
@@ -327,9 +328,10 @@ function createChartForPlotly(data, limits, settings, ticks) {
   const DEFAULT_AXIS_COLOR = '#aaa';
   const dateFormat = settings.DateFormat;
   const highlight = settings.Highlight || [];
-  const isSeries = (!settings.hasOwnProperty("IsSeries"))
-    ? true
-    : settings.IsSeries;
+  const isSeries = (
+    !settings.hasOwnProperty("ChartType")
+    || settings.ChartType.toLowerCase() === "series"
+  );
   const interactive = (!settings.hasOwnProperty("InteractiveCharts"))
     ? true
     : settings.InteractiveCharts;

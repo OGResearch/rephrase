@@ -27,7 +27,7 @@ var $reportWithoutData = {
       "Title": "Yield Curve, kind of",
       "Settings": {
         "Class": "",
-        "IsSeries": false,
+        "ChartType": 'Curve',
         "IsTitlePartOfChart": false,
         "Ticks": [1, 7, 365 / 12, 365 / 6, 365 / 4, 365, 365 * 1.5, 365 * 2, 365 * 3, 365 * 4],
         "TickLabels": ["1D", "7D", "1M", "2M", "3M", "1Y", "1.5Y", "2Y", "3Y", "4Y"]
