@@ -610,7 +610,7 @@ function createTextBlock(parent, textObj) {
         renderer: renderer
       });
     }
-    textContent.innerHTML = marked(textObj.Content);
+    textContent.innerHTML = marked.parse(textObj.Content);
     textParent.appendChild(textContent);
     if (textObj.Settings.ParseFormulas) {
       window.renderMathInElement(textContent, {
