@@ -685,7 +685,8 @@ var $reportWithoutData = {
               "Type": "SERIES",
               "Title": "Series 402",
               "Settings": {
-                "Class": ""
+                "Class": "",
+                "StackGroup": "xxx"
               },
               "Content": "AHqhysOOIgbDpWZoPUFT"
             }

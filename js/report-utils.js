@@ -461,7 +461,8 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
     x: (dates instanceof Array) ? dates : [dates],
     y: (values instanceof Array) ? values : [values],
     name: title || "",
-    type: seriesPlotType.toLowerCase()
+    type: seriesPlotType.toLowerCase(),
+    stackgroup: seriesSettings.StackGroup || ""
   };
   if (markerOnly) {
     seriesObj.mode = "markers";
