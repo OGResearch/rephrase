@@ -951,17 +951,23 @@ function createTableSeries(tbodyRow, tableRowObj) {
           : v2 - v1); // difference
       var baselineDataCell = document.createElement("td");
       $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline']);
-      $(baselineDataCell).css('text-align', (isNaN(v1)) ? 'left' : 'right');
+      if (isNaN(v1)) {
+        $(baselineDataCell).addClass(['rephrase-table-data-nan']);
+      }
       baselineDataCell.innerText = isNaN(v1) ? nanValue : v1.toFixed(nDecimals);
       baselineRow.appendChild(baselineDataCell);
       var alternativeDataCell = document.createElement("td");
       $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative']);
-      $(alternativeDataCell).css('text-align', (isNaN(v2)) ? 'left' : 'right');
+      if (isNaN(v2)) {
+        $(alternativeDataCell).addClass(['rephrase-table-data-nan']);
+      }
       alternativeDataCell.innerText = isNaN(v2) ? nanValue : v2.toFixed(nDecimals);
       alternativeRow.appendChild(alternativeDataCell);
       var diffDataCell = document.createElement("td");
       $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff']);
-      $(diffDataCell).css('text-align', (isNaN(vDiff)) ? 'left' : 'right');
+      if (isNaN(vDiff)) {
+        $(diffDataCell).addClass(['rephrase-table-data-nan']);
+      }
       diffDataCell.innerText = isNaN(vDiff) ? nanValue : vDiff.toFixed(nDecimals) + ((diffMethod === "percent") ? "%" : "");
       diffRow.appendChild(diffDataCell);
     }
@@ -976,7 +982,9 @@ function createTableSeries(tbodyRow, tableRowObj) {
       const v = (tableRowObj.Content.Values[j] === null) ? NaN : tableRowObj.Content.Values[j];
       var tbodyDataCell = document.createElement("td");
       $(tbodyDataCell).addClass('rephrase-table-data-cell');
-      $(tbodyDataCell).css('text-align', (isNaN(v)) ? 'left' : 'right');
+      if (isNaN(v)) {
+        $(tbodyDataCell).addClass(['rephrase-table-data-nan']);
+      }
       tbodyDataCell.innerText = isNaN(v) ? nanValue : v.toFixed(nDecimals);
       tbodyRow.appendChild(tbodyDataCell);
     }

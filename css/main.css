@@ -231,6 +231,11 @@ h6, .h6 {
   /* nothing so far */
 }
 
+.rephrase-table-data-nan {
+  /* special styles to apply to table call containing NaN value */
+  /* nothing so far */
+}
+
 .rephrase-diff-table-button-group {
   /* button group shown in the header of DIFF table */
   /* nothing so far */
