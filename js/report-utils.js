@@ -457,6 +457,7 @@ function createChartForPlotly(data, limits, settings, ticks) {
 // create series object for Plotly chart
 function createSeriesForPlotly(title, dates, values, seriesSettings, colors, markerOnly) {
   const seriesPlotType = seriesSettings.Type || "scatter";
+  const hasMarkers = !!seriesSettings.Markers;
   var seriesObj = {
     x: (dates instanceof Array) ? dates : [dates],
     y: (values instanceof Array) ? values : [values],
@@ -484,6 +485,14 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
   } else {
     seriesObj.line = {
       color: colors.lineColor
+    }
+    if (hasMarkers) {
+      seriesObj.mode = "lines+markers";
+      seriesObj.marker = {
+        color: seriesSettings.Markers.Color || colors.lineColor,
+        symbol: seriesSettings.Markers.Symbol || "circle",
+        size: isNaN(parseInt(seriesSettings.Markers.Size)) ? 6 : parseInt(seriesSettings.Markers.Size)
+      }
     }
   }
   return seriesObj;

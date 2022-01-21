@@ -647,7 +647,12 @@ var $reportWithoutData = {
               "Type": "SERIES",
               "Title": "Series 301",
               "Settings": {
-                "Class": ""
+                "Class": "",
+                "Markers": {
+                  "Color": "rgba(0, 120, 120, 1)",
+                  "Symbol": null,//"circle-open",
+                  "Size": 15
+                }
               },
               "Content": "hljcfGWsvZXJZNrImpJB"
             },
