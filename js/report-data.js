@@ -45,7 +45,12 @@ var $reportWithoutData = {
         {
           "Type": "CURVE",
           "Title": "Yield Curve 2",
-          "Settings": { "Class": "" },
+          "Settings": {
+            "Class": "",
+            "Markers": {
+              "Symbol": "cross"
+            }
+          },
           "Content": "Curve2"
         },
         {

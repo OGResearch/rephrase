@@ -337,7 +337,6 @@ function createChartForPlotly(data, limits, settings, ticks) {
     : settings.InteractiveCharts;
   var chartBody = document.createElement("div");
   $(chartBody).addClass("rephrase-chart-body");
-  debugger;
   const layout = {
     showlegend: (!settings.hasOwnProperty("ShowLegend")) ? DEFAULT_SHOW_LEGEND : settings.ShowLegend,
     font: {
@@ -463,7 +462,8 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
     y: (values instanceof Array) ? values : [values],
     name: title || "",
     type: seriesPlotType.toLowerCase(),
-    stackgroup: seriesSettings.StackGroup || ""
+    stackgroup: seriesSettings.StackGroup || "",
+    mode: (hasMarkers) ? "lines+markers" : "lines"
   };
   if (markerOnly) {
     seriesObj.mode = "markers";
@@ -487,7 +487,6 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
       color: colors.lineColor
     }
     if (hasMarkers) {
-      seriesObj.mode = "lines+markers";
       seriesObj.marker = {
         color: seriesSettings.Markers.Color || colors.lineColor,
         symbol: seriesSettings.Markers.Symbol || "circle",
