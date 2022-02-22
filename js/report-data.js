@@ -698,21 +698,24 @@ var $reportWithoutData = {
           "Content": [
             {
               "Type": "SERIES",
-              "Title": "Series 401",
-              "Settings": {
-                "Class": "",
-                "Color": "#000"
-              },
-              "Content": "olKGEIcsxmLSoMhRhEtP"
-            },
-            {
-              "Type": "SERIES",
               "Title": "Series 402",
               "Settings": {
                 "Class": "",
-                "StackGroup": "xxx"
+                "StackGroup": "xxx",
+                "Fill": "tozeroy",
+                "FillColor": "default"
               },
               "Content": "AHqhysOOIgbDpWZoPUFT"
+            },
+            {
+              "Type": "SERIES",
+              "Title": "Series 401",
+              "Settings": {
+                "Class": "",
+                "Color": "#000",
+                "ShowLegend": false
+              },
+              "Content": "olKGEIcsxmLSoMhRhEtP"
             }
           ]
         }
