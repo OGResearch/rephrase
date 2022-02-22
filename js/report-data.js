@@ -584,10 +584,20 @@ var $reportWithoutData = {
                 "Color": "rgba(100, 0, 200, 0.1)"
               }
             ],
+            "BarMode": "stack",
             "StartDate": "2020-01-01",
             "EndDate": "2024-12-31"
           },
           "Content": [
+            {
+              "Type": "SERIES",
+              "Title": "Series 101",
+              "Settings": {
+                "Class": "",
+                "Type": "bar"
+              },
+              "Content": "PtkeOkuClHzhOfpmBevf"
+            },
             {
               "Type": "SERIES",
               "Title": "Series 101",

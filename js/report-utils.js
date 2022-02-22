@@ -332,6 +332,7 @@ function createChartForPlotly(data, limits, settings, ticks) {
     !settings.hasOwnProperty("ChartType")
     || settings.ChartType.toLowerCase() === "series"
   );
+  const barMode = settings.hasOwnProperty("BarMode") ? settings.BarMode.toLowerCase() : 'group';
   const interactive = (!settings.hasOwnProperty("InteractiveCharts"))
     ? true
     : settings.InteractiveCharts;
@@ -343,6 +344,7 @@ function createChartForPlotly(data, limits, settings, ticks) {
       family: "Lato",
       color: "#0a0a0a"
     },
+    barmode: barMode,
     xaxis: {
       range: [limits.min, limits.max],
       type: isSeries ? 'date' : 'linear',
