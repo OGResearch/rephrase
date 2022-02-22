@@ -49,7 +49,9 @@ var $reportWithoutData = {
             "Class": "",
             "Markers": {
               "Symbol": "cross"
-            }
+            },
+            "Color": "rgba(0, 120, 120, 1)",
+            "LineWidth": 3
           },
           "Content": "Curve2"
         },
@@ -611,7 +613,9 @@ var $reportWithoutData = {
               "Type": "SERIES",
               "Title": "Series 102",
               "Settings": {
-                "Class": ""
+                "Class": "",
+                "LineWidth": 3,
+                "Color": "rgba(100,200,0,1)"
               },
               "Content": "ZinudJuZuGitiNTsJpBR"
             }

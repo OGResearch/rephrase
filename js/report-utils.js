@@ -41,6 +41,7 @@ const DEFAULT_CHART_LIBRARY = "plotly";
 const DEFAULT_HIGHLIGHT_COLOR = "rgba(100, 100, 100, 0.2)";
 const DEFAULT_MARKER_COLOR = "rgba(10, 10, 10, 1)";
 const DEFAULT_SHOW_LEGEND = true;
+const DEFAULT_LINE_WIDTH = 2;
 
 // generic function preparing the chart area and calling the implementation
 // specific for the chosen ChartLibrary
@@ -486,7 +487,8 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
     }
   } else {
     seriesObj.line = {
-      color: colors.lineColor
+      color: colors.lineColor,
+      width: seriesSettings.LineWidth || DEFAULT_LINE_WIDTH
     }
     if (hasMarkers) {
       seriesObj.marker = {
