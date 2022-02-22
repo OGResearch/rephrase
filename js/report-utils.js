@@ -466,7 +466,10 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
     name: title || "",
     type: seriesPlotType.toLowerCase(),
     stackgroup: seriesSettings.StackGroup || "",
-    mode: (hasMarkers) ? "lines+markers" : "lines"
+    mode: (hasMarkers) ? "lines+markers" : "lines",
+    fill: seriesSettings.Fill || "none", // used for bands, dates and values need to explicitly go from start-date to end-date and back to start-date
+    fillcolor: seriesSettings.FillColor || "transparent", // used for bands
+    showlegend: (!seriesSettings.hasOwnProperty("ShowLegend")) ? true : seriesSettings.ShowLegend // exclude individual series from chart legend
   };
   if (markerOnly) {
     seriesObj.mode = "markers";
