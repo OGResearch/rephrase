@@ -659,7 +659,14 @@ var $reportWithoutData = {
             "DateFormat": "YYYY:Q",
             "IsTitlePartOfChart": false,
             "StartDate": "2020-01-01",
-            "EndDate": "2024-12-31"
+            "EndDate": "2024-12-31",
+            "LegendPosition": {
+              x: 1,
+              y: 0.85,
+              xanchor: "left",
+              yanchor: "top",
+              orientation: "v"
+            }
           },
           "Content": [
             {

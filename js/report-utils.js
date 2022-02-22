@@ -327,6 +327,13 @@ function createChartForPlotly(data, limits, settings, ticks) {
   const DEFAULT_GRID_COLOR = '#ddd';
   const DEFAULT_SHOW_AXIS = true;
   const DEFAULT_AXIS_COLOR = '#aaa';
+  const DEFAULT_LEGEND_POSITION = {
+    x: 0.5,
+    y: 1,
+    xanchor: "center",
+    yanchor: "bottom",
+    orientation: "h"
+  };
   const dateFormat = settings.DateFormat;
   const highlight = settings.Highlight || [];
   const isSeries = (
@@ -382,13 +389,7 @@ function createChartForPlotly(data, limits, settings, ticks) {
       showline: isSeries ? DEFAULT_SHOW_AXIS : false, // so that YC charts look nicer
       linecolor: DEFAULT_AXIS_COLOR
     },
-    legend: {
-      x: 0.5,
-      y: 1,
-      xanchor: "center",
-      yanchor: "bottom",
-      orientation: "h"
-    },
+    legend: settings.LegendPosition || DEFAULT_LEGEND_POSITION,
     margin: {
       l: 50,
       r: 50,
