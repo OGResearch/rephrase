@@ -47,6 +47,7 @@ const DEFAULT_LINE_WIDTH = 2;
 // specific for the chosen ChartLibrary
 function createChart(parent, chartObj) {
   const chartLib = chartObj.Settings.ChartLibrary || DEFAULT_CHART_LIBRARY;
+  const chartType = chartObj.Type.toLowerCase();
   var chartParent = document.createElement("div");
   $(chartParent).attr("id", chartObj.Id);
   $(chartParent).addClass("rephrase-chart");
@@ -72,12 +73,13 @@ function createChart(parent, chartObj) {
     min: chartObj.Settings.StartDate ? new Date(chartObj.Settings.StartDate) : null,
     max: chartObj.Settings.EndDate ? new Date(chartObj.Settings.EndDate) : null
   };
-  const isSeries = (
-    !chartObj.Settings.hasOwnProperty("ChartType")
-    || chartObj.Settings.ChartType.toLowerCase() === "series"
-  );
+  // $$$$$ const isSeries = (
+  // $$$$$   !chartObj.Settings.hasOwnProperty("ChartType")
+  // $$$$$   || chartObj.Settings.ChartType.toLowerCase() === "series"
+  // $$$$$ );
   var ticks = { tickLabels: [], tickValues: [] };
-  if (!isSeries) {
+  // $$$$$ if (!isSeries) {
+  if (chartType === "curvechart") {
     if (chartObj.Settings.hasOwnProperty("TickLabels")) {
       ticks.tickLabels = chartObj.Settings.TickLabels;
     }
@@ -101,8 +103,8 @@ function createChart(parent, chartObj) {
     }
   }
   const chartBody = (chartLib.toLowerCase() === "chartjs")
-    ? $ru.createChartForChartJs(data, limits, chartObj.Settings, ticks)
-    : $ru.createChartForPlotly(data, limits, chartObj.Settings, ticks);
+    ? $ru.createChartForChartJs(chartType, data, limits, chartObj.Settings, ticks)
+    : $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
   chartParent.appendChild(chartBody);
 }
 
@@ -212,7 +214,7 @@ function addPageBreak(parent, _breakObj) {
 }
 
 // create chart elements using Chart.js library
-function createChartForChartJs(data, limits, settings, ticks) {
+function createChartForChartJs(chartType, data, limits, settings, ticks) {
   const dateFormat = settings.DateFormat;
   const highlight = settings.Highlight || [];
   var canvas = document.createElement("canvas");
@@ -323,7 +325,7 @@ function createSeriesForChartJs(title, dates, values, seriesSettings, colors, li
 }
 
 // create chart elements using Plotly library
-function createChartForPlotly(data, limits, settings, ticks) {
+function createChartForPlotly(chartType, data, limits, settings, ticks) {
   const DEFAULT_GRID_COLOR = '#ddd';
   const DEFAULT_SHOW_AXIS = true;
   const DEFAULT_AXIS_COLOR = '#aaa';
@@ -335,11 +337,33 @@ function createChartForPlotly(data, limits, settings, ticks) {
     orientation: "h"
   };
   const dateFormat = settings.DateFormat;
+  const XAXIS_SETTINGS_SWITCH = {
+    serieschart: {
+      type: 'date',
+      tickformat: $ru.momentJsDateFormatToD3TimeFormat(dateFormat),
+      tickmode: 'auto',
+      tickangle: 'auto',
+    },
+    curvechart: {
+      type: 'linear',
+      tickformat: '',
+      tickmode: 'array',
+      tickangle: 0,
+    },
+  };
+  const YAXIS_SETTING_SWITCH = {
+      serieschart: {
+        showline: DEFAULT_SHOW_AXIS
+      },
+      curvechart: {
+        showline: false // so that YC charts look nicer
+      }
+  };
   const highlight = settings.Highlight || [];
-  const isSeries = (
-    !settings.hasOwnProperty("ChartType")
-    || settings.ChartType.toLowerCase() === "series"
-  );
+  // $$$$$ const isSeries = (
+  // $$$$$   !settings.hasOwnProperty("ChartType")
+  // $$$$$   || settings.ChartType.toLowerCase() === "series"
+  // $$$$$ );
   const barMode = settings.hasOwnProperty("BarMode") ? settings.BarMode.toLowerCase() : 'group';
   const interactive = (!settings.hasOwnProperty("InteractiveCharts"))
     ? true
@@ -355,16 +379,17 @@ function createChartForPlotly(data, limits, settings, ticks) {
     barmode: barMode,
     xaxis: {
       range: [limits.min, limits.max],
-      type: isSeries ? 'date' : 'linear',
-      tickformat: isSeries ? $ru.momentJsDateFormatToD3TimeFormat(dateFormat) : "",
+      // $$$$$ type: isSeries ? 'date' : 'linear',
+      // $$$$$ tickformat: isSeries ? $ru.momentJsDateFormatToD3TimeFormat(dateFormat) : "",
       gridcolor: DEFAULT_GRID_COLOR,
       showline: DEFAULT_SHOW_AXIS,
       linecolor: DEFAULT_AXIS_COLOR,
-      tickmode: isSeries ? "auto" : "array",
+      // $$$$$ tickmode: isSeries ? "auto" : "array",
       tickvals: ticks.tickValues,
       ticktext: ticks.tickLabels,
-      tickangle: isSeries ? "auto" : 0,
+      // $$$$$ tickangle: isSeries ? "auto" : 0,
       ticklabeloverflow: "hide past div",
+      ...XAXIS_SETTINGS_SWITCH[chartType],
       // tickformatstops: [
       //   {
       //     "dtickrange": [null, 604800000],
@@ -386,8 +411,9 @@ function createChartForPlotly(data, limits, settings, ticks) {
       fixedrange: true,
       tickformat: 'g',
       gridcolor: DEFAULT_GRID_COLOR,
-      showline: isSeries ? DEFAULT_SHOW_AXIS : false, // so that YC charts look nicer
-      linecolor: DEFAULT_AXIS_COLOR
+      // $$$$$ showline: isSeries ? DEFAULT_SHOW_AXIS : false, 
+      linecolor: DEFAULT_AXIS_COLOR,
+      ...YAXIS_SETTING_SWITCH[chartType],
     },
     legend: settings.LegendPosition || DEFAULT_LEGEND_POSITION,
     margin: {
@@ -403,7 +429,7 @@ function createChartForPlotly(data, limits, settings, ticks) {
     staticPlot: !interactive
   };
   // add range highlighting if needed so (for the Series charts only)
-  if (isSeries && highlight && highlight instanceof Array && highlight.length > 0) {
+  if (chartyType === 'serieschart' && highlight && highlight instanceof Array && highlight.length > 0) {
     layout.shapes = [];
     for (let i = 0; i < highlight.length; i++) {
       const hConfig = highlight[i];
@@ -1178,6 +1204,8 @@ function addReportElement(parentElement, elementObj, parentObjSettings) {
   elementObj.Settings = appendObjSettings(elementObj.Settings || {}, parentObjSettings || {});
   switch (elementObj.Type.toLowerCase()) {
     case "chart":
+    case "serieschart":
+    case "curvechart":
       $ru.createChart(parentElement, elementObj);
       break;
     case "table":
