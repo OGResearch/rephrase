@@ -429,7 +429,7 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
     staticPlot: !interactive
   };
   // add range highlighting if needed so (for the Series charts only)
-  if (chartyType === 'serieschart' && highlight && highlight instanceof Array && highlight.length > 0) {
+  if (chartType === 'serieschart' && highlight && highlight instanceof Array && highlight.length > 0) {
     layout.shapes = [];
     for (let i = 0; i < highlight.length; i++) {
       const hConfig = highlight[i];
