@@ -100,7 +100,7 @@ function createChart(parent, chartObj) {
 //  const chartBody = (chartLib.toLowerCase() === "chartjs")
 //    ? $ru.createChartForChartJs(chartType, data, limits, chartObj.Settings, ticks)
 //    : $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
-  chartBody = $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
+  const chartBody = $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
   chartParent.appendChild(chartBody);
 }
 
