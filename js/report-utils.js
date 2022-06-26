@@ -7,7 +7,7 @@ var $ru = {
   createChartSeries: createChartSeries,
   createChartCurve: createChartCurve,
   createChartMarker: createChartMarker,
-  createChartForChartJs: createChartForChartJs,
+  // createChartForChartJs: createChartForChartJs,
   createSeriesForChartJs: createSeriesForChartJs,
   createChartForPlotly: createChartForPlotly,
   createSeriesForPlotly: createSeriesForPlotly,
@@ -38,7 +38,7 @@ var $ru = {
 };
 
 const DEFAULT_CHART_LIBRARY = "plotly";
-const DEFAULT_HIGHLIGHT_COLOR = "rgba(100, 100, 100, 0.2)";
+const DEFAULT_HIGHLIGHT_FILLCOLOR = "rgba(100, 100, 100, 0.2)";
 const DEFAULT_MARKER_COLOR = "rgba(10, 10, 10, 1)";
 const DEFAULT_SHOW_LEGEND = true;
 const DEFAULT_LINE_WIDTH = 2;
@@ -73,12 +73,7 @@ function createChart(parent, chartObj) {
     min: chartObj.Settings.StartDate ? new Date(chartObj.Settings.StartDate) : null,
     max: chartObj.Settings.EndDate ? new Date(chartObj.Settings.EndDate) : null
   };
-  // $$$$$ const isSeries = (
-  // $$$$$   !chartObj.Settings.hasOwnProperty("ChartType")
-  // $$$$$   || chartObj.Settings.ChartType.toLowerCase() === "series"
-  // $$$$$ );
   var ticks = { tickLabels: [], tickValues: [] };
-  // $$$$$ if (!isSeries) {
   if (chartType === "curvechart") {
     if (chartObj.Settings.hasOwnProperty("TickLabels")) {
       ticks.tickLabels = chartObj.Settings.TickLabels;
@@ -102,9 +97,10 @@ function createChart(parent, chartObj) {
       data.push($ru.createChartContent(contentObj, limits, thisColor, chartLib));
     }
   }
-  const chartBody = (chartLib.toLowerCase() === "chartjs")
-    ? $ru.createChartForChartJs(chartType, data, limits, chartObj.Settings, ticks)
-    : $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
+//  const chartBody = (chartLib.toLowerCase() === "chartjs")
+//    ? $ru.createChartForChartJs(chartType, data, limits, chartObj.Settings, ticks)
+//    : $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
+  chartBody = $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
   chartParent.appendChild(chartBody);
 }
 
@@ -214,83 +210,83 @@ function addPageBreak(parent, _breakObj) {
 }
 
 // create chart elements using Chart.js library
-function createChartForChartJs(chartType, data, limits, settings, ticks) {
-  const dateFormat = settings.DateFormat;
-  const highlight = settings.Highlight || [];
-  var canvas = document.createElement("canvas");
-  $(canvas).addClass("rephrase-chart-body");
-  // draw chart in canvas
-  Chart.defaults.global.defaultFontFamily = 'Lato';
-  const chartConfig = {
-    type: 'line',
-    data: {
-      datasets: data
-    },
-    options: {
-      title: {
-        display: false // title is always out of canvas
-      },
-      tooltips: {
-        intersect: false,
-        mode: 'x',
-        callbacks: {
-          label: function (tooltipItem, data) {
-            var label = data.datasets[tooltipItem.datasetIndex].label || '';
-            if (label) {
-              label += ': ';
-            }
-            label += Math.round(tooltipItem.yLabel * 1000) / 1000;
-            return label;
-          }
-        }
-      },
-      legend: {
-        display: (!settings.hasOwnProperty("ShowLegend")) ? DEFAULT_SHOW_LEGEND : settings.ShowLegend
-      },
-      aspectRatio: 1.5,
-      maintainAspectRatio: true,
-      scales: {
-        xAxes: [{
-          id: 'x-axis',
-          type: 'time',
-          distribution: 'series',
-          ticks: {
-            min: limits.min,
-            max: limits.max,
-            callback: function (d) {
-              return moment(new Date(d)).format(dateFormat);
-            }
-          },
-          time: {
-            minUnit: 'day',
-            tooltipFormat: dateFormat
-          }
-        }]
-      }
-    }
-  };
-  // add range highlighting if needed so
-  if (highlight && highlight instanceof Array && highlight.length > 0) {
-    chartConfig.options.annotation = {
-      drawTime: 'beforeDatasetsDraw',
-      annotations: []
-    };
-    for (let i = 0; i < highlight.length; i++) {
-      const hConfig = highlight[i];
-      chartConfig.options.annotation.annotations.push({
-        id: 'highlight-' + i,
-        type: 'box',
-        xScaleID: 'x-axis',
-        xMin: hConfig.StartDate ? new Date(hConfig.StartDate) : undefined,
-        xMax: hConfig.EndDate ? new Date(hConfig.EndDate) : undefined,
-        backgroundColor: hConfig.Color || DEFAULT_HIGHLIGHT_COLOR,
-        borderColor: hConfig.Color || DEFAULT_HIGHLIGHT_COLOR,
-      });
-    }
-  }
-  new Chart(canvas, chartConfig);
-  return canvas;
-}
+// function createChartForChartJs(chartType, data, limits, settings, ticks) {
+//   const dateFormat = settings.DateFormat;
+//   const highlight = settings.Highlight || [];
+//   var canvas = document.createElement("canvas");
+//   $(canvas).addClass("rephrase-chart-body");
+//   // draw chart in canvas
+//   Chart.defaults.global.defaultFontFamily = 'Lato';
+//   const chartConfig = {
+//     type: 'line',
+//     data: {
+//       datasets: data
+//     },
+//     options: {
+//       title: {
+//         display: false // title is always out of canvas
+//       },
+//       tooltips: {
+//         intersect: false,
+//         mode: 'x',
+//         callbacks: {
+//           label: function (tooltipItem, data) {
+//             var label = data.datasets[tooltipItem.datasetIndex].label || '';
+//             if (label) {
+//               label += ': ';
+//             }
+//             label += Math.round(tooltipItem.yLabel * 1000) / 1000;
+//             return label;
+//           }
+//         }
+//       },
+//       legend: {
+//         display: (!settings.hasOwnProperty("ShowLegend")) ? DEFAULT_SHOW_LEGEND : settings.ShowLegend
+//       },
+//       aspectRatio: 1.5,
+//       maintainAspectRatio: true,
+//       scales: {
+//         xAxes: [{
+//           id: 'x-axis',
+//           type: 'time',
+//           distribution: 'series',
+//           ticks: {
+//             min: limits.min,
+//             max: limits.max,
+//             callback: function (d) {
+//               return moment(new Date(d)).format(dateFormat);
+//             }
+//           },
+//           time: {
+//             minUnit: 'day',
+//             tooltipFormat: dateFormat
+//           }
+//         }]
+//       }
+//     }
+//   };
+//   // add range highlighting if needed so
+//   if (highlight && highlight instanceof Array && highlight.length > 0) {
+//     chartConfig.options.annotation = {
+//       drawTime: 'beforeDatasetsDraw',
+//       annotations: []
+//     };
+//     for (let i = 0; i < highlight.length; i++) {
+//       const hConfig = highlight[i];
+//       chartConfig.options.annotation.annotations.push({
+//         id: 'highlight-' + i,
+//         type: 'box',
+//         xScaleID: 'x-axis',
+//         xMin: hConfig.StartDate ? new Date(hConfig.StartDate) : undefined,
+//         xMax: hConfig.EndDate ? new Date(hConfig.EndDate) : undefined,
+//         backgroundColor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
+//         borderColor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
+//       });
+//     }
+//   }
+//   new Chart(canvas, chartConfig);
+//   return canvas;
+// }
 
 // create series object for Chart.js chart
 function createSeriesForChartJs(title, dates, values, seriesSettings, colors, limits) {
@@ -360,10 +356,6 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
       }
   };
   const highlight = settings.Highlight || [];
-  // $$$$$ const isSeries = (
-  // $$$$$   !settings.hasOwnProperty("ChartType")
-  // $$$$$   || settings.ChartType.toLowerCase() === "series"
-  // $$$$$ );
   const barMode = settings.hasOwnProperty("BarMode") ? settings.BarMode.toLowerCase() : 'group';
   const interactive = (!settings.hasOwnProperty("InteractiveCharts"))
     ? true
@@ -379,15 +371,11 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
     barmode: barMode,
     xaxis: {
       range: [limits.min, limits.max],
-      // $$$$$ type: isSeries ? 'date' : 'linear',
-      // $$$$$ tickformat: isSeries ? $ru.momentJsDateFormatToD3TimeFormat(dateFormat) : "",
       gridcolor: DEFAULT_GRID_COLOR,
       showline: DEFAULT_SHOW_AXIS,
       linecolor: DEFAULT_AXIS_COLOR,
-      // $$$$$ tickmode: isSeries ? "auto" : "array",
       tickvals: ticks.tickValues,
       ticktext: ticks.tickLabels,
-      // $$$$$ tickangle: isSeries ? "auto" : 0,
       ticklabeloverflow: "hide past div",
       ...XAXIS_SETTINGS_SWITCH[chartType],
       // tickformatstops: [
@@ -411,7 +399,6 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
       fixedrange: true,
       tickformat: 'g',
       gridcolor: DEFAULT_GRID_COLOR,
-      // $$$$$ showline: isSeries ? DEFAULT_SHOW_AXIS : false, 
       linecolor: DEFAULT_AXIS_COLOR,
       ...YAXIS_SETTING_SWITCH[chartType],
     },
@@ -444,8 +431,7 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
           y0: 0,
           x1: hConfig.EndDate ? new Date(hConfig.EndDate) : limits.max,
           y1: 1,
-          fillcolor: hConfig.Color || DEFAULT_HIGHLIGHT_COLOR,
-          // opacity: 0.2,
+          fillcolor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
           line: {
             width: 0
           }
@@ -842,8 +828,9 @@ function createTable(parent, tableObj) {
   $(theadFirstCell).addClass('rephrase-table-header-cell');
   theadRow.appendChild(theadFirstCell);
   // re-format the date string and populate table header
+  const dateFormat = $ru.momentJsDateFormatToD3TimeFormat(tableObj.Settings.DateFormat);
   const dates = tableObj.Settings.Dates.map(function (d) {
-    const t = moment(new Date(d)).format(tableObj.Settings.DateFormat);
+    const t = moment(new Date(d)).format(dateFormat);
     var theadDateCell = document.createElement("th");
     $(theadDateCell).addClass('rephrase-table-header-cell');
     theadDateCell.innerText = t;
@@ -1046,8 +1033,10 @@ function createGrid(parent, gridObj) {
     gridTitle.innerText = gridObj.Title;
     gridRowParent.appendChild(gridTitle);
   }
-  const nRows = gridObj.Settings.NumRows;
+  const nTiles = gridObj.Content.length; 
   const nCols = gridObj.Settings.NumColumns;
+  const nRows = Math.ceil(nTiles / nCols);
+  // const nRows = gridObj.Settings.NumRows;
   // populate rows
   for (var i = 0; i < nRows; i++) {
     // create row
@@ -1059,7 +1048,7 @@ function createGrid(parent, gridObj) {
     $(gridColParent).addClass(["grid-x", "grid-padding-x"]);
     gridRow.appendChild(gridColParent);
     // populate this row's columns
-    for (let j = 0; j < nCols; j++) {
+    for (let j = 0; j < nCols && nCols*i+j < nTiles; j++) {
       const contentIndex = nCols * i + j;
       var gridCol = document.createElement("div");
       $(gridCol).addClass(["cell", "auto"]);
