@@ -828,7 +828,7 @@ function createTable(parent, tableObj) {
   $(theadFirstCell).addClass('rephrase-table-header-cell');
   theadRow.appendChild(theadFirstCell);
   // re-format the date string and populate table header
-  const dateFormat = $ru.momentJsDateFormatToD3TimeFormat(tableObj.Settings.DateFormat);
+  const dateFormat = tableObj.Settings.DateFormat;
   const dates = tableObj.Settings.Dates.map(function (d) {
     const t = moment(new Date(d)).format(dateFormat);
     var theadDateCell = document.createElement("th");
