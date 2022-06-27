@@ -42,6 +42,20 @@ const DEFAULT_HIGHLIGHT_FILLCOLOR = "rgba(100, 100, 100, 0.2)";
 const DEFAULT_MARKER_COLOR = "rgba(10, 10, 10, 1)";
 const DEFAULT_SHOW_LEGEND = true;
 const DEFAULT_LINE_WIDTH = 2;
+const DEFAULT_NUM_DECIMALS = 2;
+const DEFAULT_HOVERFORMAT = ".2r"; // Round y-axis data tips to 2 significant numbers
+
+const DIFF_METHOD_SWITCH = {
+    ratio: (x, y) => x / y,
+    percent: (x, y) => 100*(x/y - 1),
+    diff: (x, y) => x - y,
+};
+
+const DIFF_SUFFIX_SWITCH = {
+    ratio: '',
+    percent: '%',
+    diff: '',
+}
 
 // generic function preparing the chart area and calling the implementation
 // specific for the chosen ChartLibrary
@@ -398,6 +412,7 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
       type: 'linear',
       fixedrange: true,
       tickformat: 'g',
+      hoverformat: settings.HoverFormat || DEFAULT_HOVERFORMAT,
       gridcolor: DEFAULT_GRID_COLOR,
       linecolor: DEFAULT_AXIS_COLOR,
       ...YAXIS_SETTING_SWITCH[chartType],
@@ -825,8 +840,17 @@ function createTable(parent, tableObj) {
   table.appendChild(tbody);
   // create title column in header
   var theadFirstCell = document.createElement("th");
-  $(theadFirstCell).addClass('rephrase-table-header-cell');
+  $(theadFirstCell).addClass('rephrase-table-header-cell rephrase-table-first-cell');
+  theadFirstCell.innerText = tableObj.Settings.FirstCell;
   theadRow.appendChild(theadFirstCell);
+  // create units column in header
+  const showUnits = tableObj.Settings.ShowUnits;
+  if (showUnits) {
+    var theadFirstCell = document.createElement("th");
+    $(theadFirstCell).addClass('rephrase-table-header-cell rephrase-table-units-column');
+    theadFirstCell.innerText = tableObj.Settings.UnitsHeading;
+    theadRow.appendChild(theadFirstCell);
+  }
   // re-format the date string and populate table header
   const dateFormat = tableObj.Settings.DateFormat;
   const dates = tableObj.Settings.Dates.map(function (d) {
@@ -870,9 +894,11 @@ function createTable(parent, tableObj) {
       isSeries ? 'rephrase-table-data-row' : 'rephrase-table-heading-row']);
     // create title cell
     if (isSeries) {
+      // series or diffseries
       tableRowObj.Settings = appendObjSettings(tableRowObj.Settings || {}, tableObj.Settings || {});
-      $ru.createTableSeries(tbodyRow, tableRowObj);
+      $ru.createTableSeries(tbodyRow, tableRowObj, showUnits);
     } else {
+      // heading
       var tbodyTitleCell = document.createElement("td");
       $(tbodyTitleCell).addClass('h5');
       tbodyTitleCell.setAttribute('colspan', dates.length + 1);
@@ -924,101 +950,129 @@ function createTable(parent, tableObj) {
   }
 }
 
-function createTableSeries(tbodyRow, tableRowObj) {
+function createTableSeries(tbodyRow, tableRowObj, showUnits) {
   // number of decimals when showing numbers
   const nDecParsed = parseInt(tableRowObj.Settings.NumDecimals);
-  const nDecimals = isNaN(nDecParsed) ? 2 : nDecParsed;
+  const nDecimals = isNaN(nDecParsed) ? DEFAULT_NUM_DECIMALS : nDecParsed;
   const diffMethod = (tableRowObj.Settings.Method || "Difference").toLowerCase();
   const nanValue = (tableRowObj.Settings.NaN === undefined || tableRowObj.Settings.NaN === null)
     ? NaN
     : tableRowObj.Settings.NaN;
+  // Title in first column
   var tbodyTitleCell = document.createElement("td");
   $(tbodyTitleCell).addClass('rephrase-table-data-row-title');
   tbodyTitleCell.innerText = tableRowObj.Title || "";
   tbodyRow.appendChild(tbodyTitleCell);
+  // Units
+  if (showUnits) {
+    var tbodyTitleCell = document.createElement("td");
+    $(tbodyTitleCell).addClass('rephrase-table-data-row-title rephrase-table-units-column');
+    tbodyTitleCell.innerText = tableRowObj.Settings.Units || "";
+    tbodyRow.appendChild(tbodyTitleCell);
+  }
   // create data cells
   if (tableRowObj.Type.toLowerCase() === "diffseries") {
+    //
+    // data cells for diffseries
+    //
     $(tbodyRow).addClass("rephrase-diff-table-data-row-title");
     tbodyTitleCell.setAttribute('colspan', tableRowObj.Settings.Dates.length + 1);
-    var diffRow = document.createElement("tr");
-    $(diffRow).addClass("rephrase-diff-table-data-row-diff");
-    var diffRowTitleCell = document.createElement("td");
-    $(diffRowTitleCell).addClass(['rephrase-table-data-row-title', 'rephrase-diff-table-data-row-diff-title']);
-    diffRowTitleCell.innerText = (tableRowObj.Settings.RowTitles && tableRowObj.Settings.RowTitles.Diff)
-      ? tableRowObj.Settings.RowTitles.Diff
-      : "Diff";
-    diffRow.appendChild(diffRowTitleCell);
-    var baselineRow = document.createElement("tr");
-    $(baselineRow).addClass("rephrase-diff-table-data-row-baseline");
-    var baselineRowTitleCell = document.createElement("td");
-    $(baselineRowTitleCell).addClass(['rephrase-table-data-row-title', 'rephrase-diff-table-data-row-baseline-title']);
-    baselineRowTitleCell.innerText = (tableRowObj.Settings.RowTitles && tableRowObj.Settings.RowTitles.Baseline)
-      ? tableRowObj.Settings.RowTitles.Baseline
-      : "Baseline";
-    baselineRow.appendChild(baselineRowTitleCell);
-    var alternativeRow = document.createElement("tr");
-    $(alternativeRow).addClass("rephrase-diff-table-data-row-alternative");
-    var alternativeRowTitleCell = document.createElement("td");
-    $(alternativeRowTitleCell).addClass(['rephrase-table-data-row-title', 'rephrase-diff-table-data-row-alternative-title']);
-    alternativeRowTitleCell.innerText = (tableRowObj.Settings.RowTitles && tableRowObj.Settings.RowTitles.Alternative)
-      ? tableRowObj.Settings.RowTitles.Alternative
-      : "Alternative";
-    alternativeRow.appendChild(alternativeRowTitleCell);
+
+    let diffRow = __createDifftableSeriesRow('Diff',tableRowObj.Settings, showUnits);
+    let baselineRow = __createDifftableSeriesRow('Baseline', tableRowObj.Settings, showUnits);
+    let alternativeRow = __createDifftableSeriesRow('Alternative', tableRowObj.Settings, showUnits);
+
     var baselineSeries = (typeof tableRowObj.Content[0] === "string")
       ? $ru.databank.getSeriesContent(tableRowObj.Content[0])
       : tableRowObj.Content[0];
+
     var alternativeSeries = (typeof tableRowObj.Content[1] === "string")
       ? $ru.databank.getSeriesContent(tableRowObj.Content[1])
       : tableRowObj.Content[1];
+
+    let diffFunc = DIFF_METHOD_SWITCH[diffMethod] || DIFF_METHOD_SWITCH.diff;
+    let diffSuffix = DIFF_SUFFIX_SWITCH[diffMethod] || DIFF_SUFFIX_SWITCH.diff;
+
     for (var j = 0; j < Math.max(baselineSeries.Values.length, alternativeSeries.Values.length); j++) {
       const v1 = (baselineSeries.Values[j] === null) ? NaN : baselineSeries.Values[j];
       const v2 = (alternativeSeries.Values[j] === null) ? NaN : alternativeSeries.Values[j];
-      const vDiff = (diffMethod === "ratio")
-        ? v2 / v1
-        : ((diffMethod === "percent")
-          ? 100 * (v2 - v1) / v1
-          : v2 - v1); // difference
+      const vDiff = diffFunc(v2, v1);
+
       var baselineDataCell = document.createElement("td");
-      $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline']);
-      if (isNaN(v1)) {
-        $(baselineDataCell).addClass(['rephrase-table-data-nan']);
-      }
-      baselineDataCell.innerText = isNaN(v1) ? nanValue : v1.toFixed(nDecimals);
+      $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', __getTableNumberClass(v1)]);
+      $(baselineDataCell).addClass(__evalConditionals(v1, tableRowObj.Settings.Conditional.Baseline));
+      baselineDataCell.innerText = __printTableNumber(v1, nDecimals, nanValue); 
       baselineRow.appendChild(baselineDataCell);
+
       var alternativeDataCell = document.createElement("td");
-      $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative']);
-      if (isNaN(v2)) {
-        $(alternativeDataCell).addClass(['rephrase-table-data-nan']);
-      }
-      alternativeDataCell.innerText = isNaN(v2) ? nanValue : v2.toFixed(nDecimals);
+      $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', __getTableNumberClass(v2)]);
+      $(alternativeDataCell).addClass(__evalConditionals(v2, tableRowObj.Settings.Conditional.Alternative));
+      alternativeDataCell.innerText = __printTableNumber(v2, nDecimals, nanValue);
       alternativeRow.appendChild(alternativeDataCell);
+
       var diffDataCell = document.createElement("td");
-      $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff']);
-      if (isNaN(vDiff)) {
-        $(diffDataCell).addClass(['rephrase-table-data-nan']);
-      }
-      diffDataCell.innerText = isNaN(vDiff) ? nanValue : vDiff.toFixed(nDecimals) + ((diffMethod === "percent") ? "%" : "");
+      $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', __getTableNumberClass(vDiff)]);
+      $(diffDataCell).addClass(__evalConditionals(vDiff, tableRowObj.Settings.Conditional.Diff));
+      diffDataCell.innerText = __printTableNumber(vDiff, nDecimals, nanValue) + diffSuffix;
       diffRow.appendChild(diffDataCell);
     }
     $(tbodyRow).after(baselineRow);
     $(baselineRow).after(alternativeRow);
     $(alternativeRow).after(diffRow);
   } else {
+    //
+    // data cells for series
+    //
     if (typeof tableRowObj.Content === "string") {
       tableRowObj.Content = $ru.databank.getSeriesContent(tableRowObj.Content);
     }
-    for (var j = 0; j < tableRowObj.Content.Values.length; j++) {
+    for (let j = 0; j < tableRowObj.Content.Values.length; j++) {
       const v = (tableRowObj.Content.Values[j] === null) ? NaN : tableRowObj.Content.Values[j];
-      var tbodyDataCell = document.createElement("td");
-      $(tbodyDataCell).addClass('rephrase-table-data-cell');
-      if (isNaN(v)) {
-        $(tbodyDataCell).addClass(['rephrase-table-data-nan']);
-      }
-      tbodyDataCell.innerText = isNaN(v) ? nanValue : v.toFixed(nDecimals);
+      let tbodyDataCell = document.createElement("td");
+      $(tbodyDataCell).addClass(['rephrase-table-data-cell', __getTableNumberClass(v)]);
+      tbodyDataCell.innerText = __printTableNumber(v, nDecimals, nanValue);
+      $(tbodyDataCell).addClass(__evalConditionals(v, tableRowObj.Settings.Conditional));
       tbodyRow.appendChild(tbodyDataCell);
     }
   }
 }
+
+
+function __printTableNumber(value, nDecimals, nanValue) {
+    return (isNaN(value)) ? nanValue : value.toFixed(nDecimals);
+}
+
+
+function __getTableNumberClass(value) {
+    if (isNaN(value)) { return 'rephrase-table-data-nan'; }
+    else if (value === 0) { return 'rephrase-table-data-zero'; }
+    else if (value < 0) { return 'rephrase-table-data-negative'; }
+    else if (value > 0) { return 'rephrase-table-data-positive'; }
+    else { return 'rephrase-table-data-other'; }
+}
+
+
+function __evalConditionals(value, conditionals) {
+    if (!conditionals) { return "" }
+    return conditionals.filter(
+        x => (x.Bounds[0] || -Infinity)<=value && value<=(x.Bounds[1] || Infinity)
+    ).map(x => x.Class);
+}
+
+
+function __createDifftableSeriesRow(rowType, settings, showUnits) {
+    let row = document.createElement("tr");
+    $(row).addClass(sprintf('rephrase-diff-table-data-row-%s', rowType.toLowerCase()));
+    let rowTitleCell = document.createElement("td");
+    $(rowTitleCell).addClass(['rephrase-table-data-row-title', sprintf('rephrase-diff-table-data-row-%s-title', rowType.toLowerCase())]);
+    rowTitleCell.setAttribute('colspan', 1+showUnits);
+    rowTitleCell.innerText = 
+        (settings.RowTitles && settings.RowTitles[rowType])
+        ? settings.RowTitles[rowType] : rowType;
+    row.appendChild(rowTitleCell);
+    return row;
+}
+
 
 function createGrid(parent, gridObj) {
   // create a parent div elements for rows
