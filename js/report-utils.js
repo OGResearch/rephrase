@@ -18,7 +18,6 @@ var $ru = {
   createPager: createPager,
   createMatrix: createMatrix,
   addReportElement: addReportElement,
-  getColorList: getColorList,
   addPageBreak: addPageBreak,
   createWrapper: createWrapper,
   createTextBlock: createTextBlock,
@@ -29,6 +28,16 @@ var $ru = {
   getElementIds: getElementIds,
   assignElementIds: assignElementIds,
   generateToc: generateToc,
+  colorScheme: {
+      getColorList: getColorList,
+      ensureRgb: ensureRgb,
+  },
+  table: {
+    printTableNumber: printTableNumber,
+    createDifftableSeriesRow: createDifftableSeriesRow,
+    evalConditionals: evalConditionals,
+    getTableNumberClass: getTableNumberClass,
+  },
   databank: {
     getEntry: getEntry,
     getEntryName: getEntryName,
@@ -56,6 +65,20 @@ const DIFF_SUFFIX_SWITCH = {
     percent: '%',
     diff: '',
 }
+
+
+const DEFAULT_COLOR_SCHEME = {
+    ColorOrder: [
+        'rgba(0, 114, 189, 1)',
+        'rgba(217, 83, 25, 1)',
+        'rgba(237, 177, 32, 1)',
+        'rgba(126, 47, 142, 1)',
+        'rgba(119, 172, 48, 1)',
+        'rgba(77, 190, 238, 1)',
+        'rgba(162, 20, 47, 1)',
+    ],
+};
+
 
 // generic function preparing the chart area and calling the implementation
 // specific for the chosen ChartLibrary
@@ -99,15 +122,11 @@ function createChart(parent, chartObj) {
     limits.max = ((ticks.tickValues instanceof Array) && ticks.tickValues.length) ? Math.max(...ticks.tickValues) : null;
   }
   if (chartObj.hasOwnProperty("Content") && chartObj.Content instanceof Array) {
-    const colorList = $ru.getColorList(chartObj.Content.length);
-    var cx = -1;
+    const colorList = $ru.colorScheme.getColorList(chartObj.Content.length);
     for (var i = 0; i < chartObj.Content.length; i++) {
       const contentObj = chartObj.Content[i];
       contentObj.Settings = appendObjSettings(contentObj.Settings || {}, chartObj.Settings || {});
-      if (contentObj.Type.toLowerCase() !== "marker") {
-        cx++;
-      }
-      const thisColor = (contentObj.Type.toLowerCase() === "marker") ? DEFAULT_MARKER_COLOR : colorList[cx];
+      const thisColor = (contentObj.Type.toLowerCase() === "marker") ? DEFAULT_MARKER_COLOR : colorList[i % colorList.length];
       data.push($ru.createChartContent(contentObj, limits, thisColor, chartLib));
     }
   }
@@ -748,24 +767,20 @@ function freqToMomentJsUnit(freq) {
   return unit;
 }
 
-function getColorList(nColors) {
-  const defaultColorList = [
-    'rgba(0, 114, 189, 1)',
-    'rgba(217, 83, 25, 1)',
-    'rgba(237, 177, 32, 1)',
-    'rgba(126, 47, 142, 1)',
-    'rgba(119, 172, 48, 1)',
-    'rgba(77, 190, 238, 1)',
-    'rgba(162, 20, 47, 1)'
-  ];
-  const nDefaults = defaultColorList.length;
-  var colorList = [];
-  for (var i = 0; i < nColors; i++) {
-    colorList.push(defaultColorList[i % nDefaults]);
 
-  }
-  return colorList;
+function getColorList(nColors) {
+    return ($colorScheme.ColorOrder || DEFAULT_COLOR_SCHEME.ColorOrder).map(x => $ru.colorScheme.ensureRgb(x));
 }
+
+
+function ensureRgb(color) {
+    if (typeof color === 'string') { return color }
+    let func = (color.length === 3) ? "rgb" : "rgba";
+    if (color.every(x => x>=0 && x<=1)) { color = color.map(x => 255*x) };
+    if (color.length === 3) { return 'rgb(' + color.join() + ')' };
+    if (color.length === 4) { return 'rgba(' + color.join() + ')' };
+}
+
 
 function createTable(parent, tableObj) {
   // create a div to wrap the table
@@ -978,9 +993,9 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
     $(tbodyRow).addClass("rephrase-diff-table-data-row-title");
     tbodyTitleCell.setAttribute('colspan', tableRowObj.Settings.Dates.length + 1);
 
-    let diffRow = __createDifftableSeriesRow('Diff',tableRowObj.Settings, showUnits);
-    let baselineRow = __createDifftableSeriesRow('Baseline', tableRowObj.Settings, showUnits);
-    let alternativeRow = __createDifftableSeriesRow('Alternative', tableRowObj.Settings, showUnits);
+    let diffRow = $ru.table.createDifftableSeriesRow('Diff',tableRowObj.Settings, showUnits);
+    let baselineRow = $ru.table.createDifftableSeriesRow('Baseline', tableRowObj.Settings, showUnits);
+    let alternativeRow = $ru.table.createDifftableSeriesRow('Alternative', tableRowObj.Settings, showUnits);
 
     var baselineSeries = (typeof tableRowObj.Content[0] === "string")
       ? $ru.databank.getSeriesContent(tableRowObj.Content[0])
@@ -999,21 +1014,21 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
       const vDiff = diffFunc(v2, v1);
 
       var baselineDataCell = document.createElement("td");
-      $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', __getTableNumberClass(v1)]);
-      $(baselineDataCell).addClass(__evalConditionals(v1, tableRowObj.Settings.Conditional.Baseline));
-      baselineDataCell.innerText = __printTableNumber(v1, nDecimals, nanValue); 
+      $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', $ru.table.getTableNumberClass(v1)]);
+      $(baselineDataCell).addClass($ru.table.evalConditionals(v1, tableRowObj.Settings.Conditional.Baseline));
+      baselineDataCell.innerText = $ru.table.printTableNumber(v1, nDecimals, nanValue); 
       baselineRow.appendChild(baselineDataCell);
 
       var alternativeDataCell = document.createElement("td");
-      $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', __getTableNumberClass(v2)]);
-      $(alternativeDataCell).addClass(__evalConditionals(v2, tableRowObj.Settings.Conditional.Alternative));
-      alternativeDataCell.innerText = __printTableNumber(v2, nDecimals, nanValue);
+      $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', $ru.table.getTableNumberClass(v2)]);
+      $(alternativeDataCell).addClass($ru.table.evalConditionals(v2, tableRowObj.Settings.Conditional.Alternative));
+      alternativeDataCell.innerText = $ru.table.printTableNumber(v2, nDecimals, nanValue);
       alternativeRow.appendChild(alternativeDataCell);
 
       var diffDataCell = document.createElement("td");
-      $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', __getTableNumberClass(vDiff)]);
-      $(diffDataCell).addClass(__evalConditionals(vDiff, tableRowObj.Settings.Conditional.Diff));
-      diffDataCell.innerText = __printTableNumber(vDiff, nDecimals, nanValue) + diffSuffix;
+      $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', $ru.table.getTableNumberClass(vDiff)]);
+      $(diffDataCell).addClass($ru.table.evalConditionals(vDiff, tableRowObj.Settings.Conditional.Diff));
+      diffDataCell.innerText = $ru.table.printTableNumber(vDiff, nDecimals, nanValue) + diffSuffix;
       diffRow.appendChild(diffDataCell);
     }
     $(tbodyRow).after(baselineRow);
@@ -1029,21 +1044,21 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
     for (let j = 0; j < tableRowObj.Content.Values.length; j++) {
       const v = (tableRowObj.Content.Values[j] === null) ? NaN : tableRowObj.Content.Values[j];
       let tbodyDataCell = document.createElement("td");
-      $(tbodyDataCell).addClass(['rephrase-table-data-cell', __getTableNumberClass(v)]);
-      tbodyDataCell.innerText = __printTableNumber(v, nDecimals, nanValue);
-      $(tbodyDataCell).addClass(__evalConditionals(v, tableRowObj.Settings.Conditional));
+      $(tbodyDataCell).addClass(['rephrase-table-data-cell', $ru.table.getTableNumberClass(v)]);
+      tbodyDataCell.innerText = $ru.table.printTableNumber(v, nDecimals, nanValue);
+      $(tbodyDataCell).addClass($ru.table.evalConditionals(v, tableRowObj.Settings.Conditional));
       tbodyRow.appendChild(tbodyDataCell);
     }
   }
 }
 
 
-function __printTableNumber(value, nDecimals, nanValue) {
+function printTableNumber(value, nDecimals, nanValue) {
     return (isNaN(value)) ? nanValue : value.toFixed(nDecimals);
 }
 
 
-function __getTableNumberClass(value) {
+function getTableNumberClass(value) {
     if (isNaN(value)) { return 'rephrase-table-data-nan'; }
     else if (value === 0) { return 'rephrase-table-data-zero'; }
     else if (value < 0) { return 'rephrase-table-data-negative'; }
@@ -1052,7 +1067,7 @@ function __getTableNumberClass(value) {
 }
 
 
-function __evalConditionals(value, conditionals) {
+function evalConditionals(value, conditionals) {
     if (!conditionals) { return "" }
     return conditionals.filter(
         x => (x.Bounds[0] || -Infinity)<=value && value<=(x.Bounds[1] || Infinity)
@@ -1060,7 +1075,7 @@ function __evalConditionals(value, conditionals) {
 }
 
 
-function __createDifftableSeriesRow(rowType, settings, showUnits) {
+function createDifftableSeriesRow(rowType, settings, showUnits) {
     let row = document.createElement("tr");
     $(row).addClass(sprintf('rephrase-diff-table-data-row-%s', rowType.toLowerCase()));
     let rowTitleCell = document.createElement("td");
