@@ -365,7 +365,7 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
     yanchor: "bottom",
     orientation: "h"
   };
-  const dateFormat = settings.DateFormat;
+  const dateFormat = settings.DateFormat || "";
   const XAXIS_SETTINGS_SWITCH = {
     serieschart: {
       type: 'date',
