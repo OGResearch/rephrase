@@ -6,12 +6,9 @@ var $ru = {
   createChartContent: createChartContent,
   createChartSeries: createChartSeries,
   createChartCurve: createChartCurve,
-  createChartMarker: createChartMarker,
-  // createChartForChartJs: createChartForChartJs,
-  createSeriesForChartJs: createSeriesForChartJs,
-  createChartForPlotly: createChartForPlotly,
-  createSeriesForPlotly: createSeriesForPlotly,
-  freqToUnit: freqToMomentJsUnit,
+  createChartBody: createChartBody,
+  createSeries: createSeries,
+  createSpreads: createSpreads,
   createTable: createTable,
   createTableSeries: createTableSeries,
   createGrid: createGrid,
@@ -28,6 +25,9 @@ var $ru = {
   getElementIds: getElementIds,
   assignElementIds: assignElementIds,
   generateToc: generateToc,
+  test: {
+      nonemptyArray: x => x instanceof Array && x.length > 0,
+  },
   colorScheme: {
       getColorList: getColorList,
       ensureRgb: ensureRgb,
@@ -47,12 +47,13 @@ var $ru = {
 };
 
 const DEFAULT_CHART_LIBRARY = "plotly";
-const DEFAULT_HIGHLIGHT_FILLCOLOR = "rgba(100, 100, 100, 0.2)";
+// const DEFAULT_HIGHLIGHT_FILLCOLOR =;
 const DEFAULT_MARKER_COLOR = "rgba(10, 10, 10, 1)";
 const DEFAULT_SHOW_LEGEND = true;
 const DEFAULT_LINE_WIDTH = 2;
 const DEFAULT_NUM_DECIMALS = 2;
 const DEFAULT_HOVERFORMAT = ".2r"; // Round y-axis data tips to 2 significant numbers
+const DEFAULT_TEXT_POSITION = "top";
 
 const DIFF_METHOD_SWITCH = {
     ratio: (x, y) => x / y,
@@ -78,6 +79,62 @@ const DEFAULT_COLOR_SCHEME = {
         'rgba(162, 20, 47, 1)',
     ],
 };
+
+
+const DEFAULT_PLOTLY_LAYOUT = {
+    "showlegend": true,
+    "font": {
+        "family": "Open Sans",
+        "color": "#0a0a0a"
+    },
+    "barmode": null,
+    "xaxis": {
+        "type": null,
+        "dtick": null,
+        "xtick0": null,
+        "rangemode": null,
+        "fixedrange": false,
+        "gridcolor": "#dddddd",
+        "showline": true,
+        "zeroline": false,
+        "linecolor": "#aaaaaa",
+        "tickvals": null,
+        "ticktext": null,
+        "ticklabeloverflow": "hide past div",
+        "tickformat": null,
+        "tickmode": "auto",
+        "tickangle": "auto",
+        "mirror": true
+    },
+    "yaxis": {
+        "type": "linear",
+        "rangemode": "tozero",
+        "autorange": true,
+        "fixedrange": false,
+        "tickformat": "g",
+        "hoverformat": ".2r",
+        "gridcolor": "#dddddd",
+        "linecolor": "#aaaaaa",
+        "zeroline": false,
+        "mirror": true,
+        "showline": true
+    },
+    "legend": {
+        "x": 0.5,
+        "y": 1.02,
+        "xanchor": "center",
+        "yanchor": "bottom",
+        "orientation": "h"
+    },
+    "margin": {
+        "l": 50,
+        "r": 50,
+        "b": 30,
+        "t": 10,
+        "pad": 4
+    },
+    "shapes": []
+  };
 
 
 // generic function preparing the chart area and calling the implementation
@@ -122,7 +179,7 @@ function createChart(parent, chartObj) {
     limits.max = ((ticks.tickValues instanceof Array) && ticks.tickValues.length) ? Math.max(...ticks.tickValues) : null;
   }
   if (chartObj.hasOwnProperty("Content") && chartObj.Content instanceof Array) {
-    const colorList = $ru.colorScheme.getColorList(chartObj.Content.length);
+    const colorList = $ru.colorScheme.getColorList();
     for (var i = 0; i < chartObj.Content.length; i++) {
       const contentObj = chartObj.Content[i];
       contentObj.Settings = appendObjSettings(contentObj.Settings || {}, chartObj.Settings || {});
@@ -130,10 +187,8 @@ function createChart(parent, chartObj) {
       data.push($ru.createChartContent(contentObj, limits, thisColor, chartLib));
     }
   }
-//  const chartBody = (chartLib.toLowerCase() === "chartjs")
-//    ? $ru.createChartForChartJs(chartType, data, limits, chartObj.Settings, ticks)
-//    : $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
-  const chartBody = $ru.createChartForPlotly(chartType, data, limits, chartObj.Settings, ticks);
+
+  const chartBody = $ru.createChartBody(chartType, data, limits, chartObj.Settings, ticks);
   chartParent.appendChild(chartBody);
 }
 
@@ -142,12 +197,10 @@ function createChartContent(contentObj, limits, color, chartLib) {
     || !contentObj.hasOwnProperty("Type") || !contentObj.Type) {
     return {};
   }
-  // switch between createChartCurve, createChartMarker and createChartSeries
+  // switch between createChartCurve and createChartSeries
   switch (contentObj.Type.toLowerCase()) {
     case "curve":
       return $ru.createChartCurve(contentObj, limits, color, chartLib);
-    case "marker":
-      return $ru.createChartMarker(contentObj, limits, color, chartLib);
     case "series":
       return $ru.createChartSeries(contentObj, limits, color, chartLib);
     default:
@@ -171,36 +224,25 @@ function createChartCurve(curveObj, limits, color, chartLib) {
   const colors = {
     lineColor: overrideColor || color
   }
-  switch (chartLib.toLowerCase()) {
-    case "chartjs":
-    // todo: implement this
-    case "plotly":
-    default:
-      return $ru.createSeriesForPlotly(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings, colors, false);
+  let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings, colors, false);
+
+  if ($ru.test.nonemptyArray(curveObj.Content.Spreads)) {
+      seriesObj.error_y = $ru.createSpreads(curveObj.Content.Spreads);
   }
+
+  return seriesObj;
 }
 
-function createChartMarker(markerObj, limits, color, chartLib) {
-  // return empty object if smth. is wrong
-  if (!markerObj.hasOwnProperty("Content") || !((typeof markerObj.Content === "string")
-    || (typeof markerObj.Content === "object"
-      && markerObj.Content.hasOwnProperty("X")
-      && markerObj.Content.hasOwnProperty("Y")))) {
-    return {};
-  }
-  const overrideColor = (markerObj.hasOwnProperty("Settings") && (typeof markerObj.Settings === "object")
-    && markerObj.Settings.hasOwnProperty("Color")) ? markerObj.Settings.Color : null;
-  const colors = {
-    markerColor: overrideColor || color
-  }
-  switch (chartLib.toLowerCase()) {
-    case "chartjs":
-    // todo: implement this
-    case "plotly":
-    default:
-      return $ru.createSeriesForPlotly(markerObj.Title, markerObj.Content.X, markerObj.Content.Y, markerObj.Settings, colors, true);
-  }
+
+function createSpreads(spreadValues) {
+    return {
+        type: "data",
+        symmetric: false, 
+        array: spreadValues, 
+        visible: true,
+    };
 }
+
 
 function createChartSeries(seriesObj, limits, color, chartLib) {
   // return empty object if smth. is wrong
@@ -224,13 +266,7 @@ function createChartSeries(seriesObj, limits, color, chartLib) {
     barBorderColor: overrideColor || color,
     lineColor: overrideColor || color
   }
-  switch (chartLib.toLowerCase()) {
-    case "chartjs":
-      return $ru.createSeriesForChartJs(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, colors, limits);
-    case "plotly":
-    default:
-      return $ru.createSeriesForPlotly(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, colors, false);
-  }
+  return $ru.createSeries(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, colors, false);
 }
 
 // add div that would force page break when printing
@@ -242,236 +278,126 @@ function addPageBreak(parent, _breakObj) {
   parent.appendChild(pageBreakDiv);
 }
 
-// create chart elements using Chart.js library
-// function createChartForChartJs(chartType, data, limits, settings, ticks) {
-//   const dateFormat = settings.DateFormat;
-//   const highlight = settings.Highlight || [];
-//   var canvas = document.createElement("canvas");
-//   $(canvas).addClass("rephrase-chart-body");
-//   // draw chart in canvas
-//   Chart.defaults.global.defaultFontFamily = 'Lato';
-//   const chartConfig = {
-//     type: 'line',
-//     data: {
-//       datasets: data
-//     },
-//     options: {
-//       title: {
-//         display: false // title is always out of canvas
-//       },
-//       tooltips: {
-//         intersect: false,
-//         mode: 'x',
-//         callbacks: {
-//           label: function (tooltipItem, data) {
-//             var label = data.datasets[tooltipItem.datasetIndex].label || '';
-//             if (label) {
-//               label += ': ';
-//             }
-//             label += Math.round(tooltipItem.yLabel * 1000) / 1000;
-//             return label;
-//           }
-//         }
-//       },
-//       legend: {
-//         display: (!settings.hasOwnProperty("ShowLegend")) ? DEFAULT_SHOW_LEGEND : settings.ShowLegend
-//       },
-//       aspectRatio: 1.5,
-//       maintainAspectRatio: true,
-//       scales: {
-//         xAxes: [{
-//           id: 'x-axis',
-//           type: 'time',
-//           distribution: 'series',
-//           ticks: {
-//             min: limits.min,
-//             max: limits.max,
-//             callback: function (d) {
-//               return moment(new Date(d)).format(dateFormat);
-//             }
-//           },
-//           time: {
-//             minUnit: 'day',
-//             tooltipFormat: dateFormat
-//           }
-//         }]
-//       }
-//     }
-//   };
-//   // add range highlighting if needed so
-//   if (highlight && highlight instanceof Array && highlight.length > 0) {
-//     chartConfig.options.annotation = {
-//       drawTime: 'beforeDatasetsDraw',
-//       annotations: []
-//     };
-//     for (let i = 0; i < highlight.length; i++) {
-//       const hConfig = highlight[i];
-//       chartConfig.options.annotation.annotations.push({
-//         id: 'highlight-' + i,
-//         type: 'box',
-//         xScaleID: 'x-axis',
-//         xMin: hConfig.StartDate ? new Date(hConfig.StartDate) : undefined,
-//         xMax: hConfig.EndDate ? new Date(hConfig.EndDate) : undefined,
-//         backgroundColor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
-//         borderColor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
-//       });
-//     }
-//   }
-//   new Chart(canvas, chartConfig);
-//   return canvas;
-// }
 
-// create series object for Chart.js chart
-function createSeriesForChartJs(title, dates, values, seriesSettings, colors, limits) {
-  var tsData = [];
-  for (var i = 0; i < values.length; i++) {
-    const thisDate = dates[i];
-    if ((limits.min && thisDate < limits.min) || (limits.max && thisDate > limits.max)) {
-      continue;
-    }
-    tsData.push({
-      x: thisDate,
-      y: values[i]
-    });
-  }
-  const seriesPlotType = seriesSettings.Type || "line";
-  var seriesObj = {
-    data: tsData,
-    label: title || "",
-    type: seriesPlotType.toLowerCase()
-  };
-  if (seriesObj.type === "bar") {
-    seriesObj.borderWidth = 1;
-    seriesObj.borderColor = colors.barBorderColor;
-    seriesObj.backgroundColor = colors.barFaceColor;
-  } else {
-    seriesObj.lineTension = 0;
-    seriesObj.fill = false;
-    seriesObj.borderColor = colors.lineColor;
-    seriesObj.backgroundColor = colors.lineColor;
-  }
-  return seriesObj;
-}
-
-// create chart elements using Plotly library
-function createChartForPlotly(chartType, data, limits, settings, ticks) {
-  const DEFAULT_GRID_COLOR = '#ddd';
-  const DEFAULT_SHOW_AXIS = true;
-  const DEFAULT_AXIS_COLOR = '#aaa';
-  const DEFAULT_LEGEND_POSITION = {
-    x: 0.5,
-    y: 1,
-    xanchor: "center",
-    yanchor: "bottom",
-    orientation: "h"
-  };
+// create chart elements 
+function createChartBody(chartType, data, limits, settings, ticks) {
   const dateFormat = settings.DateFormat || "";
-  const XAXIS_SETTINGS_SWITCH = {
-    serieschart: {
-      type: 'date',
-      tickformat: $ru.momentJsDateFormatToD3TimeFormat(dateFormat),
-      tickmode: 'auto',
-      tickangle: 'auto',
-    },
-    curvechart: {
-      type: 'linear',
-      tickformat: '',
-      tickmode: 'array',
-      tickangle: 0,
-    },
-  };
-  const YAXIS_SETTING_SWITCH = {
-      serieschart: {
-        showline: DEFAULT_SHOW_AXIS
-      },
-      curvechart: {
-        showline: false // so that YC charts look nicer
-      }
-  };
   const highlight = settings.Highlight || [];
-  const barMode = settings.hasOwnProperty("BarMode") ? settings.BarMode.toLowerCase() : 'group';
+  const barMode = settings.BarMode;
   const interactive = (!settings.hasOwnProperty("InteractiveCharts"))
     ? true
     : settings.InteractiveCharts;
   var chartBody = document.createElement("div");
   $(chartBody).addClass("rephrase-chart-body");
+
   const layout = {
-    showlegend: (!settings.hasOwnProperty("ShowLegend")) ? DEFAULT_SHOW_LEGEND : settings.ShowLegend,
+    showlegend: true,
     font: {
-      family: "Lato",
-      color: "#0a0a0a"
+        family: "Open Sans",
+        color: "#0a0a0a"
     },
-    barmode: barMode,
+    barmode: null,
     xaxis: {
-      range: [limits.min, limits.max],
-      gridcolor: DEFAULT_GRID_COLOR,
-      showline: DEFAULT_SHOW_AXIS,
-      linecolor: DEFAULT_AXIS_COLOR,
-      tickvals: ticks.tickValues,
-      ticktext: ticks.tickLabels,
-      ticklabeloverflow: "hide past div",
-      ...XAXIS_SETTINGS_SWITCH[chartType],
-      // tickformatstops: [
-      //   {
-      //     "dtickrange": [null, 604800000],
-      //     "value": "%b %d, %Y"
-      //   },
-      //   {
-      //     "dtickrange": [604800000,"M1"],
-      //     "value": "%b %Y"
-      //   },
-      //   {
-      //     "dtickrange": ["M1", null],
-      //     "value": $ru.momentJsDateFormatToD3TimeFormat(dateFormat)
-      //   }
-      // ]
+        type: null,
+        dtick: null,
+        xtick0: null,
+        rangemode: null,
+        fixedrange: false,
+        gridcolor: "#dddddd",
+        showline: true,
+        zeroline: false,
+        linecolor: "#aaaaaa",
+        tickvals: null,
+        ticktext: null,
+        ticklabeloverflow: "hide past div",
+        tickformat: null,
+        tickmode: "auto",
+        tickangle: "auto",
+        mirror: true
     },
     yaxis: {
-      autorange: true,
-      type: 'linear',
-      fixedrange: true,
-      tickformat: 'g',
-      hoverformat: settings.HoverFormat || DEFAULT_HOVERFORMAT,
-      gridcolor: DEFAULT_GRID_COLOR,
-      linecolor: DEFAULT_AXIS_COLOR,
-      ...YAXIS_SETTING_SWITCH[chartType],
+        type: "linear",
+        rangemode: "tozero",
+        autorange: true,
+        fixedrange: false,
+        tickformat: "g",
+        hoverformat: ".2r",
+        gridcolor: "#dddddd",
+        linecolor: "#aaaaaa",
+        zeroline: false,
+        mirror: true,
+        showline: true
     },
-    legend: settings.LegendPosition || DEFAULT_LEGEND_POSITION,
+    legend: {
+        x: 0.5,
+        y: 1.02,
+        xanchor: "center",
+        yanchor: "bottom",
+        orientation: "h"
+    },
     margin: {
-      l: 50,
-      r: 50,
-      b: 30,
-      t: 10,
-      pad: 4
-    }
+        l: 50,
+        r: 50,
+        b: 30,
+        t: 10,
+        pad: 4
+    },
+    shapes: []
   };
+
+  switch (chartType) {
+    case "serieschart":
+      //layout.yaxis.rangemode = "normal";
+      layout.xaxis.type = "date";
+      layout.xaxis.tickformat = $ru.momentJsDateFormatToD3TimeFormat(dateFormat);
+      layout.xaxis.tickmode = "auto";
+      break;
+    case "curvechart":
+      layout.xaxis.type = "linear";
+      layout.xaxis.tickformat = "";
+      layout.xaxis.tickmode = "array";
+      layout.yaxis.rangemode = "tozero";
+      break;
+  }
+
+  layout.xaxis.range = [limits.min, limits.max];
+  layout.xaxis.tickvals = ticks.tickValues;
+  layout.xaxis.ticktext = ticks.tickLabels;
+
   const config = {
     responsive: true,
     staticPlot: !interactive
   };
+
+  if (!(layout.shapes instanceof Array)) {
+    layout.shapes = [];
+  }
+
   // add range highlighting if needed so (for the Series charts only)
   if (chartType === 'serieschart' && highlight && highlight instanceof Array && highlight.length > 0) {
-    layout.shapes = [];
-    for (let i = 0; i < highlight.length; i++) {
-      const hConfig = highlight[i];
-      layout.shapes.push(
-        {
-          type: 'rect',
-          // x-reference is assigned to the x-values
-          xref: 'x',
-          // y-reference is assigned to the plot paper [0,1]
-          yref: 'paper',
-          x0: hConfig.StartDate ? new Date(hConfig.StartDate) : limits.min,
-          y0: 0,
-          x1: hConfig.EndDate ? new Date(hConfig.EndDate) : limits.max,
-          y1: 1,
-          fillcolor: hConfig.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR,
-          line: {
-            width: 0
-          }
-        });
+    for (let h of highlight) {
+      let shape = {
+        type: "rect",
+        xref: "x",
+        x0: null,
+        x1: null,
+        yref: "paper",
+        y0: 0,
+        y1: 1,
+        fillcolor: "rgba(100, 100, 100, 0.2)",
+        line: {
+            width: 3,
+            color: "red"
+        }
+      };
+      shape.x0 = h.StartDate;
+      shape.x1 = h.EndDate || h.StartDate;
+      shape = {...shape, ...h.Settings.Shape};
+      console.log(shape);
+      layout.shapes.push(shape);
     }
   }
+
   // we are adding charts only after document is ready
   // because it (1) makes the browser open quicker (almost immediately 
   // even for the huge reports), and (2) the widths of DIV containers 
@@ -503,30 +429,46 @@ function createChartForPlotly(chartType, data, limits, settings, ticks) {
   return chartBody;
 }
 
-// create series object for Plotly chart
-function createSeriesForPlotly(title, dates, values, seriesSettings, colors, markerOnly) {
-  const seriesPlotType = seriesSettings.Type || "scatter";
+// create series object for chart
+function createSeries(title, dates, values, seriesSettings, colors, markerOnly) {
   const hasMarkers = !!seriesSettings.Markers;
-  var seriesObj = {
-    x: (dates instanceof Array) ? dates : [dates],
-    y: (values instanceof Array) ? values : [values],
-    name: title || "",
-    type: seriesPlotType.toLowerCase(),
-    stackgroup: seriesSettings.StackGroup || "",
-    mode: (hasMarkers) ? "lines+markers" : "lines",
-    fill: seriesSettings.Fill || "none", // used for bands, dates and values need to explicitly go from start-date to end-date and back to start-date
-    fillcolor: seriesSettings.FillColor || "transparent", // used for bands
-    showlegend: (!seriesSettings.hasOwnProperty("ShowLegend")) ? true : seriesSettings.ShowLegend // exclude individual series from chart legend
-  };
-  if (markerOnly) {
-    seriesObj.mode = "markers";
-    seriesObj.marker = {
-      color: colors.markerColor,
-      symbol: seriesSettings.Symbol || "circle-open", // see: https://plotly.com/javascript/reference/#scatter-marker-symbol
-      size: 12
-    };
-    seriesObj.showlegend = false;
+  const hasErrors = !!seriesSettings.Error;
+  const hasLines = seriesSettings.LineWidth > 0;
+
+//  const seriesObj = {
+//    x: null,
+//    y: null,
+//    text: null,
+//    name: null,
+//    type: null,
+//    stackgroup: null,
+//    mode: null,
+//    fill: null,
+//    fillcolor: null,
+//    showlegend: null,
+//    line: null,
+//    marker: null,
+//    hoverinfo: "x+y+name+text"
+//  };
+
+
+  const seriesObj = {};
+  seriesObj.hoverinfo = "x+y+name+text";
+  seriesObj.x = (dates instanceof Array) ? dates : [dates];
+  seriesObj.y = (values instanceof Array) ? values : [values];
+  seriesObj.mode = "lines";
+  seriesObj.name = title || "";
+  seriesObj.type = (seriesSettings.Type || "scatter").toLowerCase();
+  seriesObj.stackgroup = seriesSettings.StackGroup || "";
+  seriesObj.fill = seriesSettings.Fill || "none"; // used for bands, dates and values need to explicitly go from start-date to end-date and back to start-date
+  seriesObj.fillcolor = seriesSettings.FillColor || "transparent"; // used for bands
+  seriesObj.showlegend = (!seriesSettings.hasOwnProperty("ShowLegend")) ? true : seriesSettings.ShowLegend; // exclude individual series from chart legend
+  seriesObj.text = seriesSettings.Text || null;
+
+  if (hasMarkers) {
+    seriesObj.mode += "+markers";
   }
+
   if (seriesObj.type === "bar") {
     seriesObj.marker = {
       color: colors.barFaceColor,
@@ -534,22 +476,26 @@ function createSeriesForPlotly(title, dates, values, seriesSettings, colors, mar
         color: colors.barBorderColor,
         width: 1
       }
-    }
+    };
   } else {
     seriesObj.line = {
       color: colors.lineColor,
-      width: seriesSettings.LineWidth || DEFAULT_LINE_WIDTH
-    }
+      width: seriesSettings.LineWidth
+    };
     if (hasMarkers) {
-      seriesObj.marker = {
-        color: seriesSettings.Markers.Color || colors.lineColor,
-        symbol: seriesSettings.Markers.Symbol || "circle",
-        size: isNaN(parseInt(seriesSettings.Markers.Size)) ? 6 : parseInt(seriesSettings.Markers.Size)
-      }
+        seriesObj.marker = seriesSettings.Markers;
+        seriesObj.marker.color = seriesObj.marker.color || colors.lineColor;
+//      seriesObj.marker = {
+//        color: seriesSettings.Markers.Color || colors.lineColor,
+//        symbol: seriesSettings.Markers.Symbol || "circle",
+//        size: isNaN(parseInt(seriesSettings.Markers.Size)) ? 6 : parseInt(seriesSettings.Markers.Size),
+//        line: { width: 4 },
+//      };
     }
   }
   return seriesObj;
 }
+
 
 function createMatrix(parent, matrixObj) {
   // by default do not round matrix numbers
@@ -575,6 +521,7 @@ function createMatrix(parent, matrixObj) {
   $(matrixBodyDiv).addClass(["rephrase-matrix-body", "table-scroll"]);
   matrixParent.appendChild(matrixBodyDiv);
   // create content
+  console.log(matrixObj);
   if (matrixObj.Content && (matrixObj.Content instanceof Array) && matrixObj.Content.length > 0) {
     var matrix = document.createElement("table");
     $(matrix).addClass(["rephrase-matrix-table", "hover", "unstriped"]);
@@ -609,11 +556,13 @@ function createMatrix(parent, matrixObj) {
     var tbody = document.createElement("tbody");
     $(tbody).addClass('rephrase-matrix-table-body');
     matrix.appendChild(tbody);
+    const cellClasses = matrixObj.Settings.CellClasses;
     // populate table body
     for (var i = 0; i < matrixObj.Content.length; i++) {
       var tbodyRow = document.createElement("tr");
       tbody.appendChild(tbodyRow);
       const matrixRow = matrixObj.Content[i];
+      const cellClassesRow = (cellClasses instanceof Array) ? cellClasses[i] : null;
       if (hasRowNames) {
         const rName = matrixObj.Settings.RowNames[i];
         var theadCell = document.createElement("th");
@@ -623,8 +572,12 @@ function createMatrix(parent, matrixObj) {
       }
       for (let j = 0; j < matrixRow.length; j++) {
         const v = (nDecimals === -1) ? matrixRow[j] : matrixRow[j].toFixed(nDecimals);
+        const c = (cellClassesRow instanceof Array) ? cellClassesRow[j] : null;
         var tbodyDataCell = document.createElement("td");
         $(tbodyDataCell).addClass('rephrase-matrix-data-cell');
+        if (c) {
+            $(tbodyDataCell).addClass(c);
+        }
         tbodyDataCell.innerText = v;
         tbodyRow.appendChild(tbodyDataCell);
       }
@@ -742,33 +695,8 @@ function momentJsDateFormatToD3TimeFormat(dateFormat) {
   return d3TimeFormat;
 }
 
-// convert frequency letter to Chart.js time unit
-function freqToMomentJsUnit(freq) {
-  var unit = "";
-  switch (+freq) {
-    case 365:
-      unit = "day";
-      break;
-    case 52:
-      unit = "week";
-      break;
-    case 12:
-      unit = "month";
-      break;
-    case 4:
-      unit = "quarter";
-      break;
-    case 1:
-      unit = "year";
-      break;
-    default:
-      unit = "";
-  }
-  return unit;
-}
 
-
-function getColorList(nColors) {
+function getColorList() {
     return ($colorScheme.ColorOrder || DEFAULT_COLOR_SCHEME.ColorOrder).map(x => $ru.colorScheme.ensureRgb(x));
 }
 
@@ -1248,8 +1176,7 @@ function createSection(parent, sectionObj) {
 
 // wrapper element for cascading its settings down the ladder
 function createWrapper(parent, wrapperObj) {
-  for (let i = 0; i < wrapperObj.Content.length; i++) {
-    const elementObj = wrapperObj.Content[i];
+  for (elementObj of wrapperObj.Content) {
     $ru.addReportElement(parent, elementObj, wrapperObj.Settings);
   }
 }
