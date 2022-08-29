@@ -23,7 +23,6 @@ var $ru = {
   momentJsDateFormatToD3TimeFormat: momentJsDateFormatToD3TimeFormat,
   postProcessIrisCode: postProcessIrisCode,
   getElementIds: getElementIds,
-  assignElementIds: assignElementIds,
   generateToc: generateToc,
   test: {
       nonemptyArray: x => x instanceof Array && x.length > 0,
@@ -1241,33 +1240,6 @@ function getElementIds(content) {
   return ids;
 }
 
-function assignElementIds(content, existingIds) {
-  existingIds = existingIds.concat($ru.getElementIds(content));
-  const isListContent = (content instanceof Array);
-  content = isListContent ? content : [content];
-
-  for (var i = 0; i < content.length; i++) {
-    if (content[i] && (typeof content[i] === "object")
-      && !content[i].hasOwnProperty("Id")
-      && content[i].hasOwnProperty("Type")) {
-      var sfx = 0;
-      const baseName = content[i].Type.toLowerCase();
-      while (existingIds.includes('rephrase-' + baseName + "-" + sfx)) {
-        ++sfx;
-      }
-      const newId = 'rephrase-' + baseName + "-" + sfx;
-      content[i].Id = newId;
-      existingIds.push(newId);
-    }
-    if (content[i] && content[i].hasOwnProperty("Content") && (typeof content[i].Content === "object")) {
-      const res = $ru.assignElementIds(content[i].Content, existingIds);
-      content[i].Content = res.content;
-      existingIds = res.existingIds;
-    }
-  }
-
-  return { content: isListContent ? content : content[0], existingIds: existingIds };
-}
 
 function generateToc(parentList, content, depth, excludeTypes) {
   const thisContent = (content instanceof Array) ? content : [content];
@@ -1298,6 +1270,7 @@ function generateToc(parentList, content, depth, excludeTypes) {
   }
   return parentList;
 }
+
 
 // copy parent object settings to the current one if the setting
 // is not present in the current object yet
