@@ -91,9 +91,6 @@ $(document).foundation();
     footerText.innerText = $report.Settings.Footer || "";
   }
 
-  // assign IDs to all elements
-  $report.Content = $ru.assignElementIds($report.Content, []).content;
-
   // render ToC if needed
   var tocWrapperDiv = document.querySelector('.report-toc-menu-wrapper');
   var tocButton = document.querySelector('.report-toc-button');
