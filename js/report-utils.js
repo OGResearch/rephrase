@@ -330,7 +330,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
     },
     legend: {
         x: 0.5,
-        y: 1.02,
+        y: 1.025,
         xanchor: "center",
         yanchor: "bottom",
         orientation: "h"
@@ -1045,7 +1045,7 @@ function createGrid(parent, gridObj) {
     $(gridColParent).addClass(["grid-x", "grid-padding-x"]);
     gridRow.appendChild(gridColParent);
     // populate this row's columns
-    for (let j = 0; j < nCols && nCols*i+j < nTiles; j++) {
+    for (let j = 0; j < nCols; j++) {
       const contentIndex = nCols * i + j;
       var gridCol = document.createElement("div");
       $(gridCol).addClass(["cell", "auto"]);
