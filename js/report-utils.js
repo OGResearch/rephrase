@@ -378,21 +378,15 @@ function createChartBody(chartType, data, limits, settings, ticks) {
       let shape = {
         type: "rect",
         xref: "x",
-        x0: null,
-        x1: null,
+        x0: h.StartDate || settings.StartDate,
+        x1: h.EndDate || settings.EndDate,
         yref: "paper",
         y0: 0,
         y1: 1,
-        fillcolor: "rgba(100, 100, 100, 0.2)",
-        line: {
-            width: 3,
-            color: "red"
-        }
+        fillcolor: h.Settings.FillCollor || "rgba(100, 100, 100, 0.2)",
+        line : Object.keys(h.Settings.Line).length ? h.Settings.Line : {"width": 0},
       };
-      shape.x0 = h.StartDate;
-      shape.x1 = h.EndDate || h.StartDate;
       shape = {...shape, ...h.Settings.Shape};
-      console.log(shape);
       layout.shapes.push(shape);
     }
   }
@@ -1081,11 +1075,11 @@ function createPager(parent, pagerObj) {
   }
   $(sliderArea).append($("<div class='cell auto'></div>").append(sliderParent));
   var sliderButtons = $("<div class='cell small-2'></div>");
-  var prevButton = $("<a class='button hollow rephrase-pager-slider-prev-button'>&lt;&lt;</a>")
+  var prevButton = $("<a class='button hollow rephrase-pager-slider-prev-button' accesskeey='j'>&lt;&lt;</a>")
     .on("click", function () {
       updateSlider(-1);
     });
-  var nextButton = $("<a class='button hollow rephrase-pager-slider-next-button'>&gt;&gt;</a>")
+  var nextButton = $("<a class='button hollow rephrase-pager-slider-next-button' accesskey='k'>&gt;&gt;</a>")
     .on("click", function () {
       updateSlider(1);
     });
