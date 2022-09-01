@@ -80,62 +80,6 @@ const DEFAULT_COLOR_SCHEME = {
 };
 
 
-const DEFAULT_PLOTLY_LAYOUT = {
-    "showlegend": true,
-    "font": {
-        "family": "Open Sans",
-        "color": "#0a0a0a"
-    },
-    "barmode": null,
-    "xaxis": {
-        "type": null,
-        "dtick": null,
-        "xtick0": null,
-        "rangemode": null,
-        "fixedrange": false,
-        "gridcolor": "#dddddd",
-        "showline": true,
-        "zeroline": false,
-        "linecolor": "#aaaaaa",
-        "tickvals": null,
-        "ticktext": null,
-        "ticklabeloverflow": "hide past div",
-        "tickformat": null,
-        "tickmode": "auto",
-        "tickangle": "auto",
-        "mirror": true
-    },
-    "yaxis": {
-        "type": "linear",
-        "rangemode": "tozero",
-        "autorange": true,
-        "fixedrange": false,
-        "tickformat": "g",
-        "hoverformat": ".2r",
-        "gridcolor": "#dddddd",
-        "linecolor": "#aaaaaa",
-        "zeroline": false,
-        "mirror": true,
-        "showline": true
-    },
-    "legend": {
-        "x": 0.5,
-        "y": 1.02,
-        "xanchor": "center",
-        "yanchor": "bottom",
-        "orientation": "h"
-    },
-    "margin": {
-        "l": 50,
-        "r": 50,
-        "b": 30,
-        "t": 10,
-        "pad": 4
-    },
-    "shapes": []
-  };
-
-
 // generic function preparing the chart area and calling the implementation
 // specific for the chosen ChartLibrary
 function createChart(parent, chartObj) {
@@ -295,7 +239,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
         family: "Open Sans",
         color: "#0a0a0a"
     },
-    barmode: null,
+    barmode: settings.BarMode || "group",
     xaxis: {
         type: null,
         dtick: null,
