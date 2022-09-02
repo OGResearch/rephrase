@@ -42,7 +42,8 @@ var $ru = {
     getEntryName: getEntryName,
     getSeriesContent: getSeriesContent,
 
-  }
+  },
+  getTitle: getTitle,
 };
 
 const DEFAULT_CHART_LIBRARY = "plotly";
@@ -54,13 +55,15 @@ const DEFAULT_NUM_DECIMALS = 2;
 const DEFAULT_HOVERFORMAT = ".2r"; // Round y-axis data tips to 2 significant numbers
 const DEFAULT_TEXT_POSITION = "top";
 
-const DIFF_METHOD_SWITCH = {
+
+const DIFF_METHOD = {
     ratio: (x, y) => x / y,
     percent: (x, y) => 100*(x/y - 1),
     diff: (x, y) => x - y,
 };
 
-const DIFF_SUFFIX_SWITCH = {
+
+const DIFF_SUFFIX = {
     ratio: '',
     percent: '%',
     diff: '',
@@ -94,16 +97,17 @@ function createChart(parent, chartObj) {
     $(chartParent).addClass(chartObj.Settings.Class);
   }
   parent.appendChild(chartParent);
+
   // whether to include title in canvas or make it a separate div
-  const hideTitle = (chartObj.Settings.hasOwnProperty("ShowTitle") && !chartObj.Settings.ShowTitle);
+  const title = $ru.getTitle(chartObj);
   // create chart title
-  const chartTitle = chartObj.Title || "";
-  if (chartTitle && !hideTitle) {
+  if (title) {
     var chartTitleDiv = document.createElement("div");
     $(chartTitleDiv).addClass(["rephrase-chart-title", "h4"]);
-    chartTitleDiv.innerText = chartTitle;
+    chartTitleDiv.innerText = title;
     chartParent.appendChild(chartTitleDiv);
   }
+
   // generate data for the chart
   var data = [];
   const limits = {
@@ -234,7 +238,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
   $(chartBody).addClass("rephrase-chart-body");
 
   const layout = {
-    showlegend: true,
+    showlegend: (settings.hasOwnProperty("ShowLegend")) ? settings.ShowLegend : false,
     font: {
         family: "Open Sans",
         color: "#0a0a0a"
@@ -458,7 +462,6 @@ function createMatrix(parent, matrixObj) {
   $(matrixBodyDiv).addClass(["rephrase-matrix-body", "table-scroll"]);
   matrixParent.appendChild(matrixBodyDiv);
   // create content
-  console.log(matrixObj);
   if (matrixObj.Content && (matrixObj.Content instanceof Array) && matrixObj.Content.length > 0) {
     var matrix = document.createElement("table");
     $(matrix).addClass(["rephrase-matrix-table", "hover", "unstriped"]);
@@ -870,8 +873,8 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
       ? $ru.databank.getSeriesContent(tableRowObj.Content[1])
       : tableRowObj.Content[1];
 
-    let diffFunc = DIFF_METHOD_SWITCH[diffMethod] || DIFF_METHOD_SWITCH.diff;
-    let diffSuffix = DIFF_SUFFIX_SWITCH[diffMethod] || DIFF_SUFFIX_SWITCH.diff;
+    let diffFunc = DIFF_METHOD[diffMethod] || DIFF_METHOD.diff;
+    let diffSuffix = DIFF_SUFFIX[diffMethod] || DIFF_SUFFIX.diff;
 
     for (var j = 0; j < Math.max(baselineSeries.Values.length, alternativeSeries.Values.length); j++) {
       const v1 = (baselineSeries.Values[j] === null) ? NaN : baselineSeries.Values[j];
@@ -960,13 +963,16 @@ function createGrid(parent, gridObj) {
   $(gridRowParent).attr("id", gridObj.Id);
   $(gridRowParent).addClass(["rephrase-grid", "grid-y", "grid-padding-y"]);
   parent.appendChild(gridRowParent);
-  // create grid title
-  if (gridObj.Title) {
-    var gridTitle = document.createElement("h2");
-    $(gridTitle).addClass("rephrase-grid-title");
-    gridTitle.innerText = gridObj.Title;
-    gridRowParent.appendChild(gridTitle);
+
+  // Create grid title
+  const title = $ru.getTitle(gridObj);
+  if (title) {
+    const gridTitleElement = document.createElement("h2");
+    $(gridTitleElement).addClass("rephrase-grid-title");
+    gridTitleElement.innerText = title;
+    gridRowParent.appendChild(gridTitleElement);
   }
+
   const nTiles = gridObj.Content.length; 
   const nCols = gridObj.Settings.NumColumns;
   const nRows = Math.ceil(nTiles / nCols);
@@ -999,50 +1005,80 @@ function createPager(parent, pagerObj) {
   $(pagerParent).attr("id", pagerObj.Id);
   $(pagerParent).addClass(["rephrase-pager"]);
   parent.appendChild(pagerParent);
+
   // create pager title
-  if (pagerObj.Title) {
-    var pagerTitle = document.createElement("h2");
-    $(pagerTitle).addClass("rephrase-pager-title");
-    pagerTitle.innerText = pagerObj.Title;
-    pagerParent.appendChild(pagerTitle);
+  const title = $ru.getTitle(pagerObj);
+  if (title) {
+    const pagerTitleElement = document.createElement("h2");
+    $(pagerTitleElement).addClass("rephrase-pager-title");
+    pagerTitleElement.innerText = title;
+    pagerParent.appendChild(pagerTitleElement);
   }
+
   const nPages = pagerObj.Content.length;
-  var sliderArea = $("<div class='rephrase-pager-slider-area grid-x grid-margin-x'></div>");
+  const sliderArea = document.createElement("div");
+  $(sliderArea).addClass(["rephrase-pager-slider-area", "grid-x", "grid-margin-x"]);
   $(pagerParent).append(sliderArea);
-  var sliderParent = $("<div data-slider></div>")
-    .addClass(["rephrase-pager-slider", "slider"])
-    .append("<span class='slider-handle' data-slider-handle role='slider' tabindex='1'></span>")
-    .append("<span class='slider-fill' data-slider-fill></span>")
-    .append("<input type='hidden'>");
+
+  const sliderParent = document.createElement("div");
+  sliderParent.setAttribute("data-slider", "");
+  $(sliderParent).addClass(["rephrase-pager-slider", "slider"]);
+  $(sliderParent).append("<span class='slider-handle' data-slider-handle role='slider' tabindex='1'></span>");
+  $(sliderParent).append("<span class='slider-fill' data-slider-fill></span>");
+  $(sliderParent).append("<input type='hidden'>");
+
   if (nPages == 1) {
-    sliderParent.addClass("disabled");
+    $(sliderParent).addClass("disabled");
   }
-  $(sliderArea).append($("<div class='cell auto'></div>").append(sliderParent));
+  $(sliderArea).append($("<div class='cell auto'></div>").append($(sliderParent)));
+
   var sliderButtons = $("<div class='cell small-2'></div>");
-  var prevButton = $("<a class='button hollow rephrase-pager-slider-prev-button' accesskeey='j'>&lt;&lt;</a>")
+
+  const dropdownArea = $("<div class='rephrase-pager-dropdown-area'></div>");
+  const dropdownSelect = $("<select></select>")
+    .on("change", function() {
+    updateSliderTo(this.value);
+  });
+  dropdownSelect.addClass("h3");
+
+  for (let i = 0; i < nPages; i++) {
+    const title = pagerObj.Content[i].Title || `Untitled page {i}`;
+    dropdownSelect.append($(`<option value='${i}'>${title}</option>`));
+    pagerObj.Content[i].Settings.ShowTitle = false;
+  }
+  dropdownArea.append(dropdownSelect);
+  $(pagerParent).append(dropdownArea);
+
+  var prevButton = $("<a class='button hollow rephrase-pager-slider-prev-button' accesskey=','>&lt;&lt;</a>")
     .on("click", function () {
-      updateSlider(-1);
+      updateSliderBy(-1);
     });
-  var nextButton = $("<a class='button hollow rephrase-pager-slider-next-button' accesskey='k'>&gt;&gt;</a>")
+
+  var nextButton = $("<a class='button hollow rephrase-pager-slider-next-button' accesskey='.'>&gt;&gt;</a>")
     .on("click", function () {
-      updateSlider(1);
+      updateSliderBy(1);
     });
+
+  $(sliderParent).find("input")[0].value = 0;
+
   sliderButtons.append(prevButton);
   sliderButtons.append(nextButton);
+
   $(sliderArea).append(sliderButtons);
-  sliderParent.on('changed.zf.slider', function () {
-    showPage(sliderParent.find("input")[0].value);
+  $(sliderParent).on('changed.zf.slider', function () {
+    showPage($(sliderParent).find("input")[0].value);
   });
   const startPage = Math.min(nPages - 1, pagerObj.Settings.StartPage || 0);
-  var s = new Foundation.Slider(sliderParent, {
+  var s = new Foundation.Slider($(sliderParent), {
     initialStart: startPage,
     end: nPages - 1
   });
   // show 1st page or the page specified in StartPage 
   showPage(startPage);
-  // function updating value of the slider
-  function updateSlider(sign) {
-    var input = sliderParent.find("input");
+
+  // function updating value of the slider by an increment
+  function updateSliderBy(sign) {
+    const input = $(sliderParent).find("input");
     const oldVal = +input.val();
     const newVal = Math.min(nPages, Math.max(0, oldVal + sign));
     if (oldVal !== newVal) {
@@ -1050,8 +1086,19 @@ function createPager(parent, pagerObj) {
       updateButtons();
     }
   }
+
+  // function updating value of the slider to a value
+  function updateSliderTo(newVal) {
+    var input = $(sliderParent).find("input");
+    const oldVal = +input.val();
+    if (oldVal !== newVal) {
+      input.val(newVal).trigger('change');
+      updateButtons();
+    }
+  }
+
   function updateButtons() {
-    const val = sliderParent.find("input").val();
+    const val = $(sliderParent).find("input").val();
     if (val != 0) {
       prevButton.removeClass("disabled");
       prevButton.removeAttr("aria-disabled");
@@ -1066,7 +1113,10 @@ function createPager(parent, pagerObj) {
       nextButton.addClass("disabled");
       nextButton.attr("aria-disabled", "");
     }
+    dropdownSelect[0].value = val;
   }
+
+
   // function showing or creating selected page and hiding the others
   function showPage(p) {
     $(pagerParent).find(".rephrase-pager-page").hide();
@@ -1076,6 +1126,8 @@ function createPager(parent, pagerObj) {
       $(page).addClass(["rephrase-pager-page"]);
       $(page).attr("id", "page" + p);
       pagerParent.appendChild(page);
+      console.log(`Adding ${p}`);
+      console.log(pagerObj.Content[p]);
       $ru.addReportElement(page, pagerObj.Content[p], pagerObj.Settings);
     } else {
       thisPage.show();
@@ -1091,16 +1143,18 @@ function createSection(parent, sectionObj) {
   $(sectionParent).attr("id", sectionObj.Id);
   $(sectionParent).addClass(["rephrase-section"]);
   parent.appendChild(sectionParent);
+
   // create section title
-  if (sectionObj.Title) {
-    var sectionTitle = document.createElement(
+  const title = $ru.getTitle(sectionObj);
+  if (title) {
+    var sectionTitleElement = document.createElement(
       (sectionObj.Settings && sectionObj.Settings.Tag)
         ? sectionObj.Settings.Tag
         : "h2"
     );
-    $(sectionTitle).addClass("rephrase-pager-title");
-    sectionTitle.innerText = sectionObj.Title;
-    sectionParent.appendChild(sectionTitle);
+    $(sectionTitleElement).addClass("rephrase-pager-title");
+    sectionTitleElement.innerText = title;
+    sectionParent.appendChild(sectionTitleElement);
   }
   const sectionContent = (sectionObj.Content instanceof Array)
     ? sectionObj.Content
@@ -1228,3 +1282,8 @@ function appendObjSettings(objSettings, parentSettings) {
   }
   return objSettings;
 }
+
+function getTitle(obj) {
+  return (obj.Settings.hasOwnProperty("ShowTitle") && !obj.Settings.ShowTitle) ? "" : obj.Title;
+}
+

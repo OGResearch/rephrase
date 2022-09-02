@@ -337,8 +337,8 @@ h6, .h6 {
 
 .rephrase-pager {
     /* parent DIV of the report pager */
-    margin-left: 20%;
-    margin-right: 20%;
+    /* margin-left: 20%; */
+    /* margin-right: 20%; */
 }
 
 .rephrase-pager-title {
