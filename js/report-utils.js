@@ -28,9 +28,10 @@ var $ru = {
     test: {
         nonemptyArray: x => x instanceof Array && x.length > 0,
     },
+    printRgba: printRgba,
+    whitenRgba: whitenRgba,
     colorScheme: {
         getColorList: getColorList,
-        printRgba: printRgba,
     },
     table: {
         printTableNumber: printTableNumber,
@@ -147,8 +148,20 @@ function createChart(parent, chartObj) {
         for (let childObj of chartObj.Content) {
             childObj.Settings = appendObjSettings(childObj.Settings || {}, chartObj.Settings || {});
             colorCounter = (childObj.Settings.KeepColor) ? colorCounter : ++colorCounter;
-            const thisColor = colorList[colorCounter % colorList.length];
-            data.push($ru.createChartContent(childObj, freq, limits, thisColor));
+            const color = childObj.Settings.Color || colorList[colorCounter % colorList.length];
+            childObj.Settings.Color = color;
+
+            data.push($ru.createChartContent(childObj, freq, limits));
+
+            if (childObj.Settings.Bands && childObj.Settings.Bands.length > 0) {
+                for (let bandsObj of childObj.Settings.Bands) {
+                    const colorWhitened = $ru.whitenRgba(color, bandsObj.Settings.Whitening, bandsObj.Settings.Alpha);
+                    bandsObj.Settings.Color = colorWhitened;
+                    bandsObj.Settings.FillColor = colorWhitened;
+                    data.push($ru.createChartContent(bandsObj, freq, limits));
+                }
+            }
+
         }
     }
 
@@ -157,7 +170,7 @@ function createChart(parent, chartObj) {
 }
 
 
-function createChartContent(contentObj, freq, limits, color) {
+function createChartContent(contentObj, freq, limits) {
     if (!contentObj || !(typeof contentObj === "object")
         || !contentObj.hasOwnProperty("Type") || !contentObj.Type) {
         return {};
@@ -165,16 +178,17 @@ function createChartContent(contentObj, freq, limits, color) {
     // switch between createChartCurve and createChartSeries
     switch (contentObj.Type.toLowerCase()) {
         case "curve":
-            return $ru.createChartCurve(contentObj, limits, color);
+            return $ru.createChartCurve(contentObj, limits);
         case "series":
-            return $ru.createChartSeries(contentObj, freq, limits, color);
+        case "bands":
+            return $ru.createChartSeries(contentObj, freq, limits);
         default:
             return {};
     }
 }
 
 
-function createChartCurve(curveObj, limits, color) {
+function createChartCurve(curveObj, limits) {
     // return empty object if smth. is wrong
     if (!curveObj.hasOwnProperty("Content") || !((typeof curveObj.Content === "string")
         || (typeof curveObj.Content === "object"
@@ -185,12 +199,8 @@ function createChartCurve(curveObj, limits, color) {
     if (typeof curveObj.Content === "string") {
         curveObj.Content = $ru.databank.getEntry(curveObj.Content);
     }
-    const overrideColor = (curveObj.hasOwnProperty("Settings") && (typeof curveObj.Settings === "object")
-        && curveObj.Settings.hasOwnProperty("Color")) ? curveObj.Settings.Color : null;
-    const colors = {
-        lineColor: overrideColor || color
-    }
-    let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings, colors, false);
+
+    let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings, false);
 
     if ($ru.test.nonemptyArray(curveObj.Content.Spreads)) {
         seriesObj.error_y = $ru.createSpreads(curveObj.Content.Spreads);
@@ -210,7 +220,7 @@ function createSpreads(spreadValues) {
 }
 
 
-function createChartSeries(seriesObj, freq, limits, color) {
+function createChartSeries(seriesObj, freq, limits) {
     // return empty object if smth. is wrong
     if (!seriesObj.hasOwnProperty("Content") || !((typeof seriesObj.Content === "string")
         || (typeof seriesObj.Content === "object"
@@ -218,6 +228,9 @@ function createChartSeries(seriesObj, freq, limits, color) {
             && seriesObj.Content.hasOwnProperty("Values")))) {
         return {};
     }
+
+    const settings = seriesObj.Settings;
+
     if (typeof seriesObj.Content === "string") {
         seriesObj.Content = $ru.databank.getSeriesContent(seriesObj.Content);
     } else if (freq > 0) {
@@ -225,14 +238,7 @@ function createChartSeries(seriesObj, freq, limits, color) {
             return new Date(d);
         });
     }
-    const overrideColor = (seriesObj.hasOwnProperty("Settings") && (typeof seriesObj.Settings === "object")
-        && seriesObj.Settings.hasOwnProperty("Color")) ? seriesObj.Settings.Color : null;
-    const colors = {
-        barFaceColor: overrideColor || color,
-        barBorderColor: overrideColor || color,
-        lineColor: overrideColor || color,
-    }
-    return $ru.createSeries(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, colors, false);
+    return $ru.createSeries(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, false);
 }
 
 // add div that would force page break when printing
@@ -350,7 +356,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
                 yref: "paper",
                 y0: 0,
                 y1: 1,
-                fillcolor: $ru.colorScheme.printRgba(h.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR), 
+                fillcolor: $ru.printRgba(h.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR), 
                 line : Object.keys(h.Settings.Line).length ? h.Settings.Line : {"width": 0},
             };
             shape = {...shape, ...h.Settings.Shape};
@@ -390,10 +396,8 @@ function createChartBody(chartType, data, limits, settings, ticks) {
 }
 
 // create series object for chart
-function createSeries(title, dates, values, seriesSettings, colors, markerOnly) {
-    const hasMarkers = !!seriesSettings.Markers;
-    const hasErrors = !!seriesSettings.Error;
-    const hasLines = seriesSettings.LineWidth > 0;
+function createSeries(title, dates, values, settings, markerOnly) {
+    const hasMarkers = !!settings.Markers;
 
     const seriesObj = {};
     seriesObj.hoverinfo = "x+y+name+text";
@@ -401,12 +405,12 @@ function createSeries(title, dates, values, seriesSettings, colors, markerOnly) 
     seriesObj.y = (values instanceof Array) ? values : [values];
     seriesObj.mode = "lines";
     seriesObj.name = title || "";
-    seriesObj.type = (seriesSettings.Type || "scatter").toLowerCase();
-    seriesObj.stackgroup = seriesSettings.StackGroup || "";
-    seriesObj.fill = seriesSettings.Fill || "none"; // used for bands, dates and values need to explicitly go from start-date to end-date and back to start-date
-    seriesObj.fillcolor = $ru.colorScheme.printRgba(seriesSettings.FillColor) || "transparent"; // used for bands
-    seriesObj.showlegend = (!seriesSettings.hasOwnProperty("ShowLegend")) ? true : seriesSettings.ShowLegend; // exclude individual series from chart legend
-    seriesObj.text = seriesSettings.Text || null;
+    seriesObj.type = (settings.Type || "scatter").toLowerCase();
+    seriesObj.stackgroup = settings.StackGroup || "";
+    seriesObj.fill = settings.Fill || "none"; // used for bands, dates and values need to explicitly go from start-date to end-date and back to start-date
+    seriesObj.fillcolor = $ru.printRgba(settings.FillColor) || "transparent"; // used for bands
+    seriesObj.showlegend = (!settings.hasOwnProperty("ShowLegend")) ? true : settings.ShowLegend; // exclude individual series from chart legend
+    seriesObj.text = settings.Text || null;
 
     if (hasMarkers) {
         seriesObj.mode += "+markers";
@@ -414,20 +418,20 @@ function createSeries(title, dates, values, seriesSettings, colors, markerOnly) 
 
     if (seriesObj.type === "bar") {
         seriesObj.marker = {
-            color: $ru.colorScheme.printRgba(colors.barFaceColor),
+            color: $ru.printRgba(settings.Color),
             line: {
-                color: $ru.colorScheme.printRgba(colors.barBorderColor),
+                color: $ru.printRgba(settings.Color),
                 width: 1,
             }
         };
     } else {
         seriesObj.line = {
-            color: $ru.colorScheme.printRgba(colors.lineColor),
-            width: seriesSettings.LineWidth
+            color: $ru.printRgba(settings.Color),
+            width: settings.LineWidth
         };
         if (hasMarkers) {
-            seriesObj.marker = seriesSettings.Markers;
-            seriesObj.marker.color = $ru.colorScheme.printRgba(seriesObj.marker.color || colors.lineColor);
+            seriesObj.marker = settings.Markers;
+            seriesObj.marker.color = $ru.printRgba(seriesObj.marker.color || settings.Color);
         }
     }
     return seriesObj;
@@ -639,7 +643,21 @@ function getColorList() {
 
 
 function printRgba(colorArray) {
-    return 'rgba(' + colorArray + ')';
+    if (colorArray && colorArray.length===4) {
+        return 'rgba(' + colorArray + ')';
+    } else {
+        return undefined;
+    }
+}
+
+
+function whitenRgba(colorArray, whitening, alpha) {
+    if (colorArray && colorArray.length===4 && typeof(whitening)==='number') {
+        alpha = alpha || colorArray[3];
+        return [...colorArray.slice(0, 3).map(x => x*(1-whitening) + 255*whitening), alpha];
+    } else {
+        return colorArray;
+    }
 }
 
 
