@@ -48,8 +48,6 @@ var $ru = {
     getTitle: getTitle,
 };
 
-const DEFAULT_CHART_LIBRARY = "plotly";
-// const DEFAULT_HIGHLIGHT_FILLCOLOR =;
 const DEFAULT_MARKER_COLOR = [10, 10, 10, 1];
 const DEFAULT_HIGHLIGHT_FILLCOLOR = [100, 100, 100, 0.2];
 const DEFAULT_SHOW_LEGEND = true;
@@ -153,7 +151,7 @@ function createChart(parent, chartObj) {
 
             data.push($ru.createChartContent(childObj, freq, limits));
 
-            if (childObj.Settings.Bands && childObj.Settings.Bands.length > 0) {
+            if ($ru.test.nonemptyArray(childObj.Settings.Bands)) {
                 for (let bandsObj of childObj.Settings.Bands) {
                     const colorWhitened = $ru.whitenRgba(color, bandsObj.Settings.Whitening, bandsObj.Settings.Alpha);
                     bandsObj.Settings.Color = colorWhitened;
@@ -346,7 +344,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
     }
 
     // add range highlighting if needed so (for the Series charts only)
-    if (highlight && highlight instanceof Array && highlight.length > 0) {
+    if ($ru.test.nonemptyArray(highlight)) {
         for (let h of highlight) {
             let shape = {
                 type: "rect",
@@ -643,7 +641,9 @@ function getColorList() {
 
 
 function printRgba(colorArray) {
-    if (colorArray && colorArray.length===4) {
+    if (colorArray === 'transparent' || colorArray === 'half-transparent') {
+        return colorArray;
+    } else if (colorArray && colorArray.length===4) {
         return 'rgba(' + colorArray + ')';
     } else {
         return undefined;
