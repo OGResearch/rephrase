@@ -264,7 +264,8 @@ function createChartBody(chartType, data, limits, settings, ticks) {
         showlegend: (settings.hasOwnProperty("ShowLegend")) ? settings.ShowLegend : false,
         font: {
             family: "Open Sans",
-            color: "#0a0a0a"
+            color: "#0a0a0a",
+            ...settings.Layout.font,
         },
         barmode: settings.BarMode || "group",
         xaxis: {
@@ -284,7 +285,8 @@ function createChartBody(chartType, data, limits, settings, ticks) {
             tickformat: "g",
             tickmode: "auto",
             tickangle: "auto",
-            mirror: true
+            mirror: true,
+            ...settings.Layout.xaxis,
         },
         yaxis: {
             type: "linear",
@@ -297,7 +299,8 @@ function createChartBody(chartType, data, limits, settings, ticks) {
             linecolor: "#aaaaaa",
             zeroline: false,
             mirror: true,
-            showline: true
+            showline: true,
+            ...settings.Layout.yaxis,
         },
         legend: {
             bgcolor: "transparent",
@@ -305,14 +308,16 @@ function createChartBody(chartType, data, limits, settings, ticks) {
             y: 1.025,
             xanchor: "center",
             yanchor: "bottom",
-            orientation: "h"
+            orientation: "h",
+            ...settings.Layout.legend,
         },
         margin: {
             l: 50,
             r: 50,
             b: 30,
             t: 10,
-            pad: 4
+            pad: 4,
+            ...settings.Layout.margin,
         },
         shapes: []
     };
