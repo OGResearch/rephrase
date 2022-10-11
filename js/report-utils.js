@@ -46,6 +46,7 @@ var $ru = {
 
     },
     getTitle: getTitle,
+    addUserClass: addUserClass,
 };
 
 const DEFAULT_MARKER_COLOR = [10, 10, 10, 1];
@@ -290,7 +291,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
         },
         yaxis: {
             type: "linear",
-            rangemode: null,
+            rangemode: "normal",
             autorange: true,
             fixedrange: false,
             tickformat: "g",
@@ -667,6 +668,7 @@ function whitenRgba(colorArray, whitening, alpha) {
 
 
 function createTable(parent, tableObj) {
+    const TABLE_DATA_ROW_TYPES = ["series", "diffseries"]; 
     // create a div to wrap the table
     var tableParent = document.createElement("div");
     $(tableParent).attr("id", tableObj.Id);
@@ -765,7 +767,7 @@ function createTable(parent, tableObj) {
         const tableRowObj = tableObj.Content[i];
         // skip this entry if it's neither a SERIES nor HEADING or if smth. else is wrong
         if (!tableRowObj.hasOwnProperty("Type")
-            || ["diffseries", "series", "heading"].indexOf(tableRowObj.Type.toLowerCase()) === -1
+            || !["diffseries", "series", "heading"].includes(tableRowObj.Type.toLowerCase())
             || (tableRowObj.Type.toLowerCase() === "series"
                 && (!tableRowObj.hasOwnProperty("Content")
                     || !((typeof tableRowObj.Content === "string")
@@ -785,21 +787,24 @@ function createTable(parent, tableObj) {
                                 && tableRowObj.Content[0].Values.length === dates.length)))))) {
             continue;
         }
-        const isSeries = (["series", "diffseries"].indexOf(tableRowObj.Type.toLowerCase()) !== -1);
+
         // create new table row
+        const isDataRow = TABLE_DATA_ROW_TYPES.includes(tableRowObj.Type.toLowerCase());
         var tbodyRow = document.createElement("tr");
+        $ru.addUserClass(tbodyRow, tableRowObj);
+
         tbody.appendChild(tbodyRow);
-        $(tbodyRow).addClass(['rephrase-table-row',
-            isSeries ? 'rephrase-table-data-row' : 'rephrase-table-heading-row']);
+        $(tbodyRow).addClass(['rephrase-table-row', isDataRow ? 'rephrase-table-data-row' : 'rephrase-table-heading-row']);
+
         // create title cell
-        if (isSeries) {
+        if (isDataRow) {
             // series or diffseries
             tableRowObj.Settings = appendObjSettings(tableRowObj.Settings || {}, tableObj.Settings || {});
             $ru.createTableSeries(tbodyRow, tableRowObj, showUnits);
         } else {
             // heading
             var tbodyTitleCell = document.createElement("td");
-            $(tbodyTitleCell).addClass('h5');
+            // $(tbodyTitleCell).addClass('h5');
             tbodyTitleCell.setAttribute('colspan', dates.length + 1);
             tbodyTitleCell.innerText = tableRowObj.Title || "";
             tbodyRow.appendChild(tbodyTitleCell);
@@ -1309,5 +1314,12 @@ function appendObjSettings(objSettings, parentSettings) {
 // Get the element title or empty string is ShowTitle==false
 function getTitle(obj) {
     return (obj.Settings.hasOwnProperty("ShowTitle") && !obj.Settings.ShowTitle) ? "" : obj.Title;
+}
+
+
+function addUserClass(element, reportObj) {
+    if (reportObj.Settings.Class && (typeof reportObj.Settings.Class === "string" || reportObj.Settings.Class instanceof Array)) {
+        $(element).addClass(reportObj.Settings.Class);
+    }
 }
 

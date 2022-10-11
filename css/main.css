@@ -222,7 +222,7 @@ h6, .h6 {
 
 .rephrase-table-heading-row {
     /* table TD element containing table heading row */
-    /* nothing so far */
+    font-size: 120%;
 }
 
 .rephrase-table-data-row {
