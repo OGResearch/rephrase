@@ -431,7 +431,8 @@ function createSeries(title, dates, values, settings, markerOnly) {
     } else {
         seriesObj.line = {
             color: $ru.printRgba(settings.Color),
-            width: settings.LineWidth
+            width: settings.LineWidth,
+            dash: settings.LineDash,
         };
         if (hasMarkers) {
             seriesObj.marker = settings.Markers;
