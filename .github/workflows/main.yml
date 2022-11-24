@@ -42,7 +42,7 @@ jobs:
       id: vars
       run: |
         cd $GITHUB_WORKSPACE/master
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
     - name: Set release version and push new dist to MASTER
       run: |
         cd $GITHUB_WORKSPACE/master
@@ -74,7 +74,7 @@ jobs:
       id: vars_new
       run: |
         cd $GITHUB_WORKSPACE/master
-        echo "::set-output name=sha_long::$(git rev-parse HEAD)"
+        echo "sha_long=$(git rev-parse HEAD)" >> GITHUB_OUTPUT
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
