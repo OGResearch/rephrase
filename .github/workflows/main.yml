@@ -3,6 +3,7 @@ name: Snapshot Release Action
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   # This workflow contains a single job called "build"
