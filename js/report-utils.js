@@ -34,7 +34,6 @@ var $ru = {
         getColorList: getColorList,
     },
     table: {
-        printTableNumber: printTableNumber,
         createDifftableSeriesRow: createDifftableSeriesRow,
         evalConditionals: evalConditionals,
         getTableNumberClass: getTableNumberClass,
@@ -47,6 +46,8 @@ var $ru = {
     },
     getTitle: getTitle,
     addUserClass: addUserClass,
+    printTableValue: printTableValue,
+    formatNumericValue: formatNumericValue,
 };
 
 const DEFAULT_MARKER_COLOR = [10, 10, 10, 1];
@@ -56,6 +57,7 @@ const DEFAULT_LINE_WIDTH = 2;
 const DEFAULT_NUM_DECIMALS = 2;
 const DEFAULT_HOVERFORMAT = ".2r"; // Round y-axis data tips to 2 significant numbers
 const DEFAULT_TEXT_POSITION = "top";
+const DEFAULT_LOCALE = "en-US";
 
 
 const DIFF_METHOD = {
@@ -446,7 +448,8 @@ function createSeries(title, dates, values, settings, markerOnly) {
 function createMatrix(parent, matrixObj) {
     // by default do not round matrix numbers
     const nDecParsed = parseInt(matrixObj.Settings.NumDecimals);
-    const nDecimals = isNaN(nDecParsed) ? -1 : nDecParsed;
+    const nDecimals = isNaN(nDecParsed) ? DEFAULT_NUM_DECIMALS : nDecParsed;
+    const nanValue = matrixObj.Settings.NaN;
     var matrixParent = document.createElement("div");
     $(matrixParent).attr("id", matrixObj.Id);
     $(matrixParent).addClass("rephrase-matrix");
@@ -477,9 +480,9 @@ function createMatrix(parent, matrixObj) {
         }
         matrixBodyDiv.appendChild(matrix);
         // initiate matrix header column if needed
-        const hasColNames = (matrixObj.Settings.ColNames && (matrixObj.Settings.ColNames instanceof Array) && matrixObj.Settings.ColNames.length > 0);
+        const hasColumnNames = (matrixObj.Settings.ColumnNames && (matrixObj.Settings.ColumnNames instanceof Array) && matrixObj.Settings.ColumnNames.length > 0);
         const hasRowNames = (matrixObj.Settings.RowNames && (matrixObj.Settings.RowNames instanceof Array) && matrixObj.Settings.RowNames.length > 0);
-        if (hasColNames) {
+        if (hasColumnNames) {
             var thead = document.createElement("thead");
             $(thead).addClass('rephrase-matrix-header');
             matrix.appendChild(thead);
@@ -490,8 +493,8 @@ function createMatrix(parent, matrixObj) {
                 $(theadFirstCell).addClass(['rephrase-matrix-header-cell', 'rephrase-matrix-header-cell-col', 'rephrase-matrix-header-cell-row']);
                 theadRow.appendChild(theadFirstCell);
             }
-            for (let i = 0; i < matrixObj.Settings.ColNames.length; i++) {
-                const cName = matrixObj.Settings.ColNames[i];
+            for (let i = 0; i < matrixObj.Settings.ColumnNames.length; i++) {
+                const cName = matrixObj.Settings.ColumnNames[i];
                 var theadCell = document.createElement("th");
                 $(theadCell).addClass(['rephrase-matrix-header-cell', 'rephrase-matrix-header-cell-col']);
                 theadCell.innerText = cName;
@@ -516,14 +519,14 @@ function createMatrix(parent, matrixObj) {
                 tbodyRow.appendChild(theadCell);
             }
             for (let j = 0; j < matrixRow.length; j++) {
-                const v = (nDecimals === -1) ? matrixRow[j] : matrixRow[j].toFixed(nDecimals);
-                const c = (cellClassesRow instanceof Array) ? cellClassesRow[j] : null;
+                const cellValue = $ru.printTableValue(matrixRow[j], nDecimals, nanValue);
+                const cellClass = (cellClassesRow instanceof Array) ? cellClassesRow[j] : null;
                 var tbodyDataCell = document.createElement("td");
                 $(tbodyDataCell).addClass('rephrase-matrix-data-cell');
-                if (c) {
-                    $(tbodyDataCell).addClass(c);
+                if (cellClass) {
+                    $(tbodyDataCell).addClass(cellClass);
                 }
-                tbodyDataCell.innerText = v;
+                tbodyDataCell.innerText = cellValue;
                 tbodyRow.appendChild(tbodyDataCell);
             }
         }
@@ -659,7 +662,7 @@ function printRgba(colorArray) {
 
 
 function whitenRgba(colorArray, whitening, alpha) {
-    if (colorArray && colorArray.length===4 && typeof(whitening)==='number') {
+    if (colorArray && colorArray.length === 4 && typeof whitening === 'number') {
         alpha = alpha || colorArray[3];
         return [...colorArray.slice(0, 3).map(x => x*(1-whitening) + 255*whitening), alpha];
     } else {
@@ -861,9 +864,7 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
     const nDecParsed = parseInt(tableRowObj.Settings.NumDecimals);
     const nDecimals = isNaN(nDecParsed) ? DEFAULT_NUM_DECIMALS : nDecParsed;
     const diffMethod = (tableRowObj.Settings.Method || "Difference").toLowerCase();
-    const nanValue = (tableRowObj.Settings.NaN === undefined || tableRowObj.Settings.NaN === null)
-        ? NaN
-        : tableRowObj.Settings.NaN;
+    const nanValue = tableRowObj.Settings.NaN;
     // Title in first column
     var tbodyTitleCell = document.createElement("td");
     $(tbodyTitleCell).addClass('rephrase-table-data-row-title');
@@ -907,19 +908,19 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
             var baselineDataCell = document.createElement("td");
             $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', $ru.table.getTableNumberClass(v1)]);
             $(baselineDataCell).addClass($ru.table.evalConditionals(v1, tableRowObj.Settings.Conditional.Baseline));
-            baselineDataCell.innerText = $ru.table.printTableNumber(v1, nDecimals, nanValue); 
+            baselineDataCell.innerText = $ru.printTableValue(v1, nDecimals, nanValue); 
             baselineRow.appendChild(baselineDataCell);
 
             var alternativeDataCell = document.createElement("td");
             $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', $ru.table.getTableNumberClass(v2)]);
             $(alternativeDataCell).addClass($ru.table.evalConditionals(v2, tableRowObj.Settings.Conditional.Alternative));
-            alternativeDataCell.innerText = $ru.table.printTableNumber(v2, nDecimals, nanValue);
+            alternativeDataCell.innerText = $ru.printTableValue(v2, nDecimals, nanValue);
             alternativeRow.appendChild(alternativeDataCell);
 
             var diffDataCell = document.createElement("td");
             $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', $ru.table.getTableNumberClass(vDiff)]);
             $(diffDataCell).addClass($ru.table.evalConditionals(vDiff, tableRowObj.Settings.Conditional.Diff));
-            diffDataCell.innerText = $ru.table.printTableNumber(vDiff, nDecimals, nanValue) + diffSuffix;
+            diffDataCell.innerText = $ru.printTableValue(vDiff, nDecimals, nanValue) + diffSuffix;
             diffRow.appendChild(diffDataCell);
         }
         $(tbodyRow).after(baselineRow);
@@ -936,16 +937,11 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
             const v = (tableRowObj.Content.Values[j] === null) ? NaN : tableRowObj.Content.Values[j];
             let tbodyDataCell = document.createElement("td");
             $(tbodyDataCell).addClass(['rephrase-table-data-cell', $ru.table.getTableNumberClass(v)]);
-            tbodyDataCell.innerText = $ru.table.printTableNumber(v, nDecimals, nanValue);
+            tbodyDataCell.innerText = $ru.printTableValue(v, nDecimals, nanValue);
             $(tbodyDataCell).addClass($ru.table.evalConditionals(v, tableRowObj.Settings.Conditional));
             tbodyRow.appendChild(tbodyDataCell);
         }
     }
-}
-
-
-function printTableNumber(value, nDecimals, nanValue) {
-    return (isNaN(value)) ? nanValue : value.toFixed(nDecimals);
 }
 
 
@@ -1322,5 +1318,23 @@ function addUserClass(element, reportObj) {
     if (reportObj.Settings.Class && (typeof reportObj.Settings.Class === "string" || reportObj.Settings.Class instanceof Array)) {
         $(element).addClass(reportObj.Settings.Class);
     }
+}
+
+
+function printTableValue(value, nDecimals, nanValue) {
+    if (typeof value === "string") {
+        return value;
+    } else {
+        return (value) ?
+            $ru.formatNumericValue(value, nDecimals) :
+            nanValue 
+        ;
+    }
+}
+
+
+function formatNumericValue(value, nDecimals) {
+    const format = (nDecimals > 0) ? {minimumFractionDigits: nDecimals, maximumFractionDigits: nDecimals} : {};
+    return typeof value === "number" ? value.toLocaleString(DEFAULT_LOCALE, format) : value;
 }
 
