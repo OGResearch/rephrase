@@ -1325,7 +1325,7 @@ function printTableValue(value, nDecimals, nanValue) {
     if (typeof value === "string") {
         return value;
     } else {
-        return (value) ?
+        return (value || value === 0) ?
             $ru.formatNumericValue(value, nDecimals) :
             nanValue 
         ;
