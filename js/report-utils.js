@@ -264,6 +264,8 @@ function createChartBody(chartType, data, limits, settings, ticks) {
     $(chartBody).addClass("rephrase-chart-body");
 
     const layout = {
+        modebar: {add: ['hoverclosest', 'hovercompare']},
+        hovermode: "x",
         showlegend: (settings.hasOwnProperty("ShowLegend")) ? settings.ShowLegend : false,
         font: {
             family: "Open Sans",
