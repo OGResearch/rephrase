@@ -1,18 +1,28 @@
 # install NPM packages needed for bundling
 # npm i -g inline-source-cli uglify-es clean-css-cli
 
+
+# Choose version of plotly.js
+plotly_version=2.16.1
+
+
 # clean create ./dist folder
 rm -rf ../dist
 mkdir -p ../dist/lib
 
+
+# Create temporary versionless plotly file
+cp ../js/vendor/plotly-$plotly_version.min.js ../js/vendor/plotly.min.js
+
+
 # minify, concat and copy all vendor scripts into one ./dist/lib/vendor.min.js
+  # "../js/vendor/Chart.min.js"
+  # "../js/vendor/chartjs-plugin-annotation.min.js"
 declare -a js_vendor_list_no_plotly=(
   "../js/vendor/jquery.min.js"
   "../js/vendor/what-input.js"
   "../js/vendor/foundation.min.js"
   "../js/vendor/moment.min.js"
-  "../js/vendor/Chart.min.js"
-  "../js/vendor/chartjs-plugin-annotation.min.js"
   "../js/vendor/katex.min.js"
   "../js/vendor/auto-render.min.js"
   "../js/vendor/marked.min.js"
