@@ -2,6 +2,8 @@
 'use strict';
 
 // utility methods
+const TEST = 1;
+
 var $ru = {
     createChart: createChart,
     createChartContent: createChartContent,
