@@ -67,9 +67,8 @@ jobs:
     - name: Package Release Assets
       run: |
         cd $GITHUB_WORKSPACE/master
-        zip -r $GITHUB_WORKSPACE/report-unbundled.zip ./dist -x *report-template.bundle.html -x *no-plotly* -x *web-source*
-        zip -r $GITHUB_WORKSPACE/report-unbundled-no-plotly.zip ./dist -x *report-template*.bundle.html -x *vendor.min.js* -x */report-template.html -x *web-source*
-        cp ./dist/{report-template.bundle.html,report-template-no-plotly.bundle.html,report-template-web-source.html,report-template-web-source-no-plotly.html} $GITHUB_WORKSPACE/
+        zip -r $GITHUB_WORKSPACE/report-unbundled.zip ./dist -x *report-template.bundle.html -x *web-source*
+        cp ./dist/{report-template.bundle.html,report-template-web-source.html} $GITHUB_WORKSPACE/
         cd $GITHUB_WORKSPACE
     - name: Get SHA of the new bundle commit
       id: vars_new
@@ -107,16 +106,6 @@ jobs:
         asset_path: ./report-template.bundle.html
         asset_name: report-template.bundle.html
         asset_content_type: text/html
-    - name: Upload Release Asset III
-      id: upload-release-asset-3
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./report-template-no-plotly.bundle.html
-        asset_name: report-template-no-plotly.bundle.html
-        asset_content_type: text/html
     - name: Upload Release Asset IV
       id: upload-release-asset-4
       uses: actions/upload-release-asset@v1
@@ -126,16 +115,6 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./report-template-web-source.html
         asset_name: report-template-web-source.html
-        asset_content_type: text/html
-    - name: Upload Release Asset V
-      id: upload-release-asset-5
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./report-template-web-source-no-plotly.html
-        asset_name: report-template-web-source-no-plotly.html
         asset_content_type: text/html
     - name: Repository Dispatch
       uses: peter-evans/repository-dispatch@v1

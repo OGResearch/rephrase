@@ -115,20 +115,3 @@ with open("../dist/report-template.html", "w") as f:
 with open("../dist/report-template-web-source.html", "w") as f:
     f.write(html_web)
 
-# create and save "no-plotly" version
-html = re.sub(
-    "lib/vendor\.min\.js",
-    "lib/vendor-no-plotly.min.js",
-    html,
-    flags=re.DOTALL | re.MULTILINE,
-)
-html_web = re.sub(
-    "lib/vendor\.min\.js",
-    "lib/vendor-no-plotly.min.js",
-    html_web,
-    flags=re.DOTALL | re.MULTILINE,
-)
-with open("../dist/report-template-no-plotly.html", "w") as f:
-    f.write(html)
-with open("../dist/report-template-web-source-no-plotly.html", "w") as f:
-    f.write(html_web)

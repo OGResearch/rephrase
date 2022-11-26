@@ -16,9 +16,8 @@ cp ../js/vendor/plotly-$plotly_version.min.js ../js/vendor/plotly.min.js
 
 
 # minify, concat and copy all vendor scripts into one ./dist/lib/vendor.min.js
-  # "../js/vendor/Chart.min.js"
-  # "../js/vendor/chartjs-plugin-annotation.min.js"
-declare -a js_vendor_list_no_plotly=(
+declare -a js_vendor_list=(
+  "../js/vendor/plotly.min.js"
   "../js/vendor/jquery.min.js"
   "../js/vendor/what-input.js"
   "../js/vendor/foundation.min.js"
@@ -28,9 +27,7 @@ declare -a js_vendor_list_no_plotly=(
   "../js/vendor/marked.min.js"
   "../js/vendor/highlight.min.js"
 )
-declare -a js_vendor_list=("${js_vendor_list_no_plotly[@]}" "../js/vendor/plotly.min.js")
 uglifyjs $(IFS=" " ; echo "${js_vendor_list[*]}") -o ../dist/lib/vendor.min.js -c
-uglifyjs $(IFS=" " ; echo "${js_vendor_list_no_plotly[*]}") -o ../dist/lib/vendor-no-plotly.min.js -c
 
 # minify, concat and copy all vendor styles into one ./dist/lib/vendor.min.css
 declare -a css_vendor_list=(
@@ -64,4 +61,4 @@ python replace-refs.py
 # create bundled version of HTML
 cd ../dist
 inline-source --compress true report-template.html report-template.bundle.html
-inline-source --compress true report-template-no-plotly.html report-template-no-plotly.bundle.html
+
