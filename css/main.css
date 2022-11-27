@@ -34,7 +34,9 @@ h6, .h6 {
 
 .report-content {
     /* report container DIV */
-    /* nothing so far */
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .report-header {
@@ -50,6 +52,11 @@ h6, .h6 {
 .report-header .subtitle {
     /* main report subtitle H's SMALL element */
     /* nothing so far */
+}
+
+.report-header .stamp {
+    /* main report stamp above title */
+    text-align: right;
 }
 
 .report-body {

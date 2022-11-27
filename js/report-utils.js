@@ -201,7 +201,7 @@ function createChartCurve(curveObj, limits) {
         curveObj.Content = $ru.databank.getEntry(curveObj.Content);
     }
 
-    let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings, false);
+    let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings);
 
     if ($ru.test.nonemptyArray(curveObj.Content.Spreads)) {
         seriesObj.error_y = $ru.createSpreads(curveObj.Content.Spreads);
@@ -239,7 +239,7 @@ function createChartSeries(seriesObj, freq, limits) {
             return new Date(d);
         });
     }
-    return $ru.createSeries(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings, false);
+    return $ru.createSeries(seriesObj.Title, seriesObj.Content.Dates, seriesObj.Content.Values, seriesObj.Settings);
 }
 
 // add div that would force page break when printing
@@ -264,7 +264,10 @@ function createChartBody(chartType, data, limits, settings, ticks) {
     $(chartBody).addClass("rephrase-chart-body");
 
     const layout = {
-        modebar: {add: ['hoverclosest', 'hovercompare']},
+        modebar: {
+            add: ['hoverclosest', 'hovercompare'],
+            orientation: "v",
+        },
         hovermode: "x",
         showlegend: (settings.hasOwnProperty("ShowLegend")) ? settings.ShowLegend : false,
         font: {
@@ -404,14 +407,14 @@ function createChartBody(chartType, data, limits, settings, ticks) {
 }
 
 // create series object for chart
-function createSeries(title, dates, values, settings, markerOnly) {
-    const hasMarkers = !!settings.Markers;
+function createSeries(title, dates, values, settings) {
 
-    const seriesObj = {};
+    settings.Markers = (settings.Markers===true) ? {} : settings.Markers;
+
+    let seriesObj = {};
     seriesObj.hoverinfo = "x+y+name+text";
     seriesObj.x = (dates instanceof Array) ? dates : [dates];
     seriesObj.y = (values instanceof Array) ? values : [values];
-    seriesObj.mode = "lines";
     seriesObj.name = title || "";
     seriesObj.type = (settings.Type || "scatter").toLowerCase();
     seriesObj.stackgroup = settings.StackGroup || "";
@@ -420,9 +423,8 @@ function createSeries(title, dates, values, settings, markerOnly) {
     seriesObj.showlegend = (!settings.hasOwnProperty("ShowLegend")) ? true : settings.ShowLegend; // exclude individual series from chart legend
     seriesObj.text = settings.Text || null;
 
-    if (hasMarkers) {
-        seriesObj.mode += "+markers";
-    }
+    const autoMode = (settings.Markers) ? "lines+markers" : "lines";
+    seriesObj.mode = (settings.Mode) ? settings.Mode.toLowerCase() : autoMode;
 
     if (seriesObj.type === "bar") {
         seriesObj.marker = {
@@ -438,7 +440,7 @@ function createSeries(title, dates, values, settings, markerOnly) {
             width: settings.LineWidth,
             dash: settings.LineDash,
         };
-        if (hasMarkers) {
+        if (settings.Markers) {
             seriesObj.marker = settings.Markers;
             seriesObj.marker.color = $ru.printRgba(seriesObj.marker.color || settings.Color);
         }

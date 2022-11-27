@@ -30,8 +30,12 @@ $(document).foundation();
 
   // render or disable header
   var headerDiv = document.querySelector('.report-header');
-  if (!$report.hasOwnProperty("Title") || $report.Title === null) { } else {
+  if ($report.Title) {
     var headerTextDiv = headerDiv.querySelector('.header-text');
+    // stamp
+      headerTextDiv
+      .querySelector('.stamp')
+      .innerText = $report.Settings.Stamp || "";
     // set title
     headerTextDiv
       .querySelector('.title')
