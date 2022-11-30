@@ -690,10 +690,10 @@ function createTable(parent, tableObj) {
     }
     tableParent.appendChild(tableTitle);
     // what rows to display
-    tableObj.Settings.DisplayRows = tableObj.Settings.DisplayRows || {
+    tableObj.Settings.ShowRows = tableObj.Settings.ShowRows || {
         "Diff": true,
-        "Baseline": false,
-        "Alternative": false
+        "Baseline": true,
+        "Alternative": true
     };
     const isDiffTable = tableObj.Content.findIndex(function (el) { return el.Type.toLowerCase() === "diffseries"; }) !== -1;
     if (isDiffTable) {
@@ -703,7 +703,7 @@ function createTable(parent, tableObj) {
         var showBaselineBtn = document.createElement("a");
         showBaselineBtn.innerText = "Hide Baseline";
         $(showBaselineBtn).addClass(["button", "rephrase-diff-table-button", "rephrase-diff-table-button-show-baseline"]);
-        if (!tableObj.Settings.DisplayRows.Baseline) {
+        if (!tableObj.Settings.ShowRows.Baseline) {
             showBaselineBtn.innerText = "Show Baseline";
             $(showBaselineBtn).addClass("hollow");
         }
@@ -712,7 +712,7 @@ function createTable(parent, tableObj) {
         var showAlternativeBtn = document.createElement("a");
         showAlternativeBtn.innerText = "Hide Alternative";
         $(showAlternativeBtn).addClass(["button", "rephrase-diff-table-button", "rephrase-diff-table-button-show-alternative"]);
-        if (!tableObj.Settings.DisplayRows.Alternative) {
+        if (!tableObj.Settings.ShowRows.Alternative) {
             showAlternativeBtn.innerText = "Show Alternative";
             $(showAlternativeBtn).addClass("hollow");
         }
@@ -721,7 +721,7 @@ function createTable(parent, tableObj) {
         var showDiffBtn = document.createElement("a");
         showDiffBtn.innerText = "Hide Diff";
         $(showDiffBtn).addClass(["button", "rephrase-diff-table-button", "rephrase-diff-table-button-show-diff"]);
-        if (!tableObj.Settings.DisplayRows.Diff) {
+        if (!tableObj.Settings.ShowRows.Diff) {
             showDiffBtn.innerText = "Show Diff";
             $(showDiffBtn).addClass("hollow");
         }
@@ -818,13 +818,13 @@ function createTable(parent, tableObj) {
             tbodyRow.appendChild(tbodyTitleCell);
         }
     }
-    if (!tableObj.Settings.DisplayRows.Diff) {
+    if (!tableObj.Settings.ShowRows.Diff) {
         toggleRows(tableParent, "hide", "diff");
     }
-    if (!tableObj.Settings.DisplayRows.Baseline) {
+    if (!tableObj.Settings.ShowRows.Baseline) {
         toggleRows(tableParent, "hide", "baseline");
     }
-    if (!tableObj.Settings.DisplayRows.Alternative) {
+    if (!tableObj.Settings.ShowRows.Alternative) {
         toggleRows(tableParent, "hide", "alternative");
     }
     // button click event handler
