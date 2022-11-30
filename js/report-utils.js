@@ -909,20 +909,22 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
             const v2 = (alternativeSeries.Values[j] === null) ? NaN : alternativeSeries.Values[j];
             const vDiff = diffFunc(v2, v1);
 
+            const columnClass = tableRowObj.Settings.ColumnClass[j];
+
             var baselineDataCell = document.createElement("td");
-            $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', $ru.table.getTableNumberClass(v1)]);
+            $(baselineDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-baseline', $ru.table.getTableNumberClass(v1), columnClass]);
             $(baselineDataCell).addClass($ru.table.evalConditionals(v1, tableRowObj.Settings.Conditional.Baseline));
             baselineDataCell.innerText = $ru.printTableValue(v1, nDecimals, nanValue); 
             baselineRow.appendChild(baselineDataCell);
 
             var alternativeDataCell = document.createElement("td");
-            $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', $ru.table.getTableNumberClass(v2)]);
+            $(alternativeDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-alternative', $ru.table.getTableNumberClass(v2), columnClass]);
             $(alternativeDataCell).addClass($ru.table.evalConditionals(v2, tableRowObj.Settings.Conditional.Alternative));
             alternativeDataCell.innerText = $ru.printTableValue(v2, nDecimals, nanValue);
             alternativeRow.appendChild(alternativeDataCell);
 
             var diffDataCell = document.createElement("td");
-            $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', $ru.table.getTableNumberClass(vDiff)]);
+            $(diffDataCell).addClass(['rephrase-table-data-cell', 'rephrase-diff-table-data-cell-diff', $ru.table.getTableNumberClass(vDiff), columnClass]);
             $(diffDataCell).addClass($ru.table.evalConditionals(vDiff, tableRowObj.Settings.Conditional.Diff));
             diffDataCell.innerText = $ru.printTableValue(vDiff, nDecimals, nanValue) + diffSuffix;
             diffRow.appendChild(diffDataCell);
@@ -939,8 +941,9 @@ function createTableSeries(tbodyRow, tableRowObj, showUnits) {
         }
         for (let j = 0; j < tableRowObj.Content.Values.length; j++) {
             const v = (tableRowObj.Content.Values[j] === null) ? NaN : tableRowObj.Content.Values[j];
+            const columnClass = tableRowObj.Settings.ColumnClass[j];
             let tbodyDataCell = document.createElement("td");
-            $(tbodyDataCell).addClass(['rephrase-table-data-cell', $ru.table.getTableNumberClass(v)]);
+            $(tbodyDataCell).addClass(['rephrase-table-data-cell', $ru.table.getTableNumberClass(v), columnClass]);
             tbodyDataCell.innerText = $ru.printTableValue(v, nDecimals, nanValue);
             $(tbodyDataCell).addClass($ru.table.evalConditionals(v, tableRowObj.Settings.Conditional));
             tbodyRow.appendChild(tbodyDataCell);
