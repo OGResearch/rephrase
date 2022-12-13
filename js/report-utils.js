@@ -1168,6 +1168,7 @@ function createSection(parent, sectionObj) {
     var sectionParent = document.createElement("div");
     $(sectionParent).attr("id", sectionObj.Id);
     $(sectionParent).addClass(["rephrase-section"]);
+    $ru.addUserClass(sectionParent, sectionObj);
     parent.appendChild(sectionParent);
 
     // create section title
