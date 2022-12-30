@@ -424,6 +424,7 @@ function createSeries(title, dates, values, settings) {
     seriesObj.fillcolor = $ru.printRgba(settings.FillColor) || "transparent"; // used for bands
     seriesObj.showlegend = (!settings.hasOwnProperty("ShowLegend")) ? true : settings.ShowLegend; // exclude individual series from chart legend
     seriesObj.text = settings.Text || null;
+    seriesObj.cliponaxis = false;
 
     const autoMode = (settings.Markers) ? "lines+markers" : "lines";
     seriesObj.mode = (settings.Mode) ? settings.Mode.toLowerCase() : autoMode;
@@ -1046,7 +1047,10 @@ function createPager(parent, pagerObj) {
 
     const nPages = pagerObj.Content.length;
     const sliderArea = document.createElement("div");
-    $(sliderArea).addClass(["rephrase-pager-slider-area", "grid-x", "grid-margin-x"]);
+    const sliderAreaInner = document.createElement("div");
+    $(sliderArea).addClass(["rephrase-pager-slider-area"]);
+    $(sliderAreaInner).addClass(["rephrase-pager-slider-area-inner", "grid-x", "grid-margin-x"]);
+    $(sliderArea).append(sliderAreaInner);
     $(pagerParent).append(sliderArea);
 
     const sliderParent = document.createElement("div");
@@ -1059,9 +1063,9 @@ function createPager(parent, pagerObj) {
     if (nPages == 1) {
         $(sliderParent).addClass("disabled");
     }
-    $(sliderArea).append($("<div class='cell auto'></div>").append($(sliderParent)));
+    $(sliderAreaInner).append($("<div class='cell auto'></div>").append($(sliderParent)));
 
-    var sliderButtons = $("<div class='cell small-2'></div>");
+    var sliderButtons = $("<div class='rephrase-pager-slider-buttons-area cell shrink'></div>");
 
     const dropdownArea = $("<div class='rephrase-pager-dropdown-area'></div>");
     const dropdownSelect = $("<select></select>")
@@ -1093,7 +1097,7 @@ function createPager(parent, pagerObj) {
     sliderButtons.append(prevButton);
     sliderButtons.append(nextButton);
 
-    $(sliderArea).append(sliderButtons);
+    $(sliderAreaInner).append(sliderButtons);
     $(sliderParent).on('changed.zf.slider', function () {
         showPage($(sliderParent).find("input")[0].value);
     });

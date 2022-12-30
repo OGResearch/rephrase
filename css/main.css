@@ -363,6 +363,16 @@ h6, .h6 {
     /* nothing so far */
 }
 
+.rephrase-pager-slider-area-inner {
+    /* inner DIV of the pager's slider area*/
+    /* nothing so far */
+}
+
+.rephrase-pager-slider-buttons-area {
+    /* parent DIV of the pager's slider buttons*/
+    /* nothing so far */
+}
+
 .rephrase-pager-slider-prev-button {
     /* parent DIV of the pager's slider PREVIOUS button*/
     /* nothing so far */
