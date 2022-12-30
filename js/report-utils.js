@@ -204,19 +204,21 @@ function createChartCurve(curveObj, limits) {
     let seriesObj = $ru.createSeries(curveObj.Title, curveObj.Content.Ticks, curveObj.Content.Values, curveObj.Settings);
 
     if ($ru.test.nonemptyArray(curveObj.Content.Spreads)) {
-        seriesObj.error_y = $ru.createSpreads(curveObj.Content.Spreads);
+        seriesObj.error_y = $ru.createSpreads(curveObj.Content.Spreads, curveObj.Settings);
     }
 
     return seriesObj;
 }
 
 
-function createSpreads(spreadValues) {
+function createSpreads(spreadValues, settings) {
+    settings.Layout.error_y = settings.Layout.error_y || {};
     return {
         type: "data",
         symmetric: false, 
         array: spreadValues, 
         visible: true,
+        ...settings.Layout.error_y,
     };
 }
 
@@ -339,7 +341,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
             break;
         case "curvechart":
             layout.xaxis.tickmode = "array";
-            layout.yaxis.rangemode = "tozero";
+            layout.yaxis.rangemode = "normal";
             break;
     }
 
