@@ -358,6 +358,11 @@ h6, .h6 {
     /* nothing so far */
 }
 
+.rephrase-pager-controls-area {
+    /* parent DIV of the pager's slider and dropdown areas */
+    /* nothing so far */
+}
+
 .rephrase-pager-slider-area {
     /* parent DIV of the pager's slider area*/
     /* nothing so far */

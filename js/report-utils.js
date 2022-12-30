@@ -1046,12 +1046,14 @@ function createPager(parent, pagerObj) {
     }
 
     const nPages = pagerObj.Content.length;
+    const controlsArea = document.createElement("div");
     const sliderArea = document.createElement("div");
     const sliderAreaInner = document.createElement("div");
+    $(controlsArea).addClass(["rephrase-pager-controls-area"]);
     $(sliderArea).addClass(["rephrase-pager-slider-area"]);
     $(sliderAreaInner).addClass(["rephrase-pager-slider-area-inner", "grid-x", "grid-margin-x"]);
     $(sliderArea).append(sliderAreaInner);
-    $(pagerParent).append(sliderArea);
+    $(controlsArea).append(sliderArea);
 
     const sliderParent = document.createElement("div");
     sliderParent.setAttribute("data-slider", "");
@@ -1080,7 +1082,8 @@ function createPager(parent, pagerObj) {
         pagerObj.Content[i].Settings.ShowTitle = false;
     }
     dropdownArea.append(dropdownSelect);
-    $(pagerParent).append(dropdownArea);
+    $(controlsArea).append(dropdownArea);
+    $(pagerParent).append(controlsArea);
 
     var prevButton = $("<a class='button hollow rephrase-pager-slider-prev-button' accesskey=','>&lt;&lt;</a>")
         .on("click", function () {
