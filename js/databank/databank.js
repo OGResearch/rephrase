@@ -40,7 +40,7 @@ function getSeriesContent(name) {
         return new Date(d);
       });
     } else {
-      const freqUnit = $ru.freqToUnit(dataObj.Frequency);
+      const freqUnit = freqToMomentJsUnit(dataObj.Frequency);
       const startDate = new Date((dataObj.Dates instanceof Array) ? dataObj.Dates[0] : dataObj.Dates);
       for (var i = 0; i < dataObj.Values.length; i++) {
         dates.push(moment(startDate).add(i, freqUnit).toDate());
@@ -49,4 +49,29 @@ function getSeriesContent(name) {
     return { Values: dataObj.Values, Dates: dates };
   }
   return {};
+}
+
+// convert frequency letter to Moment.js time unit
+function freqToMomentJsUnit(freq) {
+  var unit = "";
+  switch (+freq) {
+    case 365:
+      unit = "day";
+      break;
+    case 52:
+      unit = "week";
+      break;
+    case 12:
+      unit = "month";
+      break;
+    case 4:
+      unit = "quarter";
+      break;
+    case 1:
+      unit = "year";
+      break;
+    default:
+      unit = "";
+  }
+  return unit;
 }
