@@ -1020,7 +1020,7 @@ function createGrid(parent, gridObj) {
         for (let j = 0; j < nCols; j++) {
             const contentIndex = nCols * i + j;
             var gridCol = document.createElement("div");
-            $(gridCol).addClass(["cell", "auto"]);
+            $(gridCol).addClass(["cell", "medium-auto"]);
             gridColParent.appendChild(gridCol);
             const gridElementObj = gridObj.Content[contentIndex];
             $ru.addReportElement(gridCol, gridElementObj, gridObj.Settings);
