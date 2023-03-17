@@ -370,7 +370,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
                 y0: 0,
                 y1: 1,
                 fillcolor: $ru.printRgba(h.Settings.FillColor || DEFAULT_HIGHLIGHT_FILLCOLOR), 
-                line : Object.keys(h.Settings.Line).length ? h.Settings.Line : {"width": 0},
+                line : (h.Settings.Line && Object.keys(h.Settings.Line).length) ? h.Settings.Line : {"width": 0},
             };
             shape = {...shape, ...h.Settings.Shape};
             layout.shapes.push(shape);
