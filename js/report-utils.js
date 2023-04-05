@@ -442,6 +442,7 @@ function createSeries(title, dates, values, settings) {
             color: $ru.printRgba(settings.Color),
             width: settings.LineWidth,
             dash: settings.LineDash,
+            ...settings.Line,
         };
         if (settings.Markers) {
             seriesObj.marker = settings.Markers;
