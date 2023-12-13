@@ -304,7 +304,7 @@ function createChartBody(chartType, data, limits, settings, ticks) {
             autorange: true,
             fixedrange: false,
             tickformat: "~r",
-            hoverformat: ".2r",
+            hoverformat: settings.HoverFormat || ".2r",
             gridcolor: "#dddddd",
             linecolor: "#aaaaaa",
             zeroline: settings.YZeroLine,
